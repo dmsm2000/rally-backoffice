@@ -82,22 +82,23 @@
             }
             <p class="mt-2 text-xs text-faint">{{ post.likes }} {{ post.likes === 1 ? 'gosto' : 'gostos' }}</p>
           </div>
-          <div class="flex shrink-0 flex-wrap items-start gap-2 sm:flex-col sm:items-stretch">
-            <a [href]="postUrl(post.id)" target="_blank" rel="noopener" [class]="styles.ghost">
+          <bo-menu class="shrink-0 self-start">
+            <a [href]="postUrl(post.id)" target="_blank" rel="noopener" [class]="styles.menuItem">
               <bo-icon name="external" />
-              Ver
+              Ver na app
             </a>
             @if (post.kind === 'authored') {
-              <button type="button" (click)="openEdit(post)" [disabled]="!!busy()" [class]="styles.ghost">
+              <button type="button" (click)="openEdit(post)" [disabled]="!!busy()" [class]="styles.menuItem">
                 <bo-icon name="pencil" />
                 Editar
               </button>
             }
-            <button type="button" (click)="remove(post)" [disabled]="!!busy()" [class]="styles.danger">
+            <div [class]="styles.menuDivider"></div>
+            <button type="button" (click)="remove(post)" [disabled]="!!busy()" [class]="styles.menuItemDanger">
               <bo-icon name="trash" />
               Apagar
             </button>
-          </div>
+          </bo-menu>
         </article>
       }
     </div>

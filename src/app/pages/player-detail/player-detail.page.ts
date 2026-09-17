@@ -8,9 +8,23 @@ import { ModerationStore } from '../../core/moderation-store';
 import { ConfirmService } from '../../ui/confirm.service';
 import { Dialog } from '../../ui/dialog';
 import { Icon, IconName } from '../../ui/icon';
+import { Menu } from '../../ui/menu';
 import { PlaceFields } from '../../ui/place-fields';
 import { ErrorState } from '../../ui/state-panels';
-import { BTN_DANGER, BTN_GHOST, BTN_LINK, BTN_PRIMARY, BTN_WARN, CARD, INPUT, LABEL, PILL } from '../../ui/styles';
+import {
+  BTN_DANGER,
+  BTN_GHOST,
+  BTN_LINK,
+  BTN_PRIMARY,
+  BTN_WARN,
+  CARD,
+  INPUT,
+  LABEL,
+  MENU_DIVIDER,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  PILL
+} from '../../ui/styles';
 import { ToastService } from '../../ui/toast.service';
 
 interface Draft {
@@ -31,7 +45,7 @@ interface Stat {
 
 @Component({
   selector: 'bo-player-detail-page',
-  imports: [FormsModule, RouterLink, Icon, Dialog, PlaceFields, ErrorState],
+  imports: [FormsModule, RouterLink, Icon, Dialog, Menu, PlaceFields, ErrorState],
   templateUrl: './player-detail.page.html'
 })
 export class PlayerDetailPage {
@@ -100,7 +114,10 @@ export class PlayerDetailPage {
     warn: BTN_WARN,
     link: BTN_LINK,
     input: INPUT,
-    label: LABEL
+    label: LABEL,
+    menuItem: MENU_ITEM,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
   protected readonly member = memberNumber;
   protected readonly initials = initials;

@@ -16,15 +16,18 @@ import { CourtReport, ReportGroup, Resolution, groupReports } from '../../core/m
 import { ModerationStore } from '../../core/moderation-store';
 import { ConfirmService } from '../../ui/confirm.service';
 import { Icon } from '../../ui/icon';
+import { Menu } from '../../ui/menu';
 import { PageHeader } from '../../ui/page-header';
 import { ReportList } from '../../ui/report-list';
 import { EmptyState, ErrorState, SkeletonCards } from '../../ui/state-panels';
 import {
-  BTN_DANGER,
   BTN_GHOST,
   BTN_LINK,
-  BTN_OK,
   CARD,
+  MENU_DIVIDER,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_ITEM_OK,
   PILL,
   SEGMENT,
   SEGMENTED,
@@ -37,7 +40,7 @@ type Tab = 'open' | 'resolved';
 
 @Component({
   selector: 'bo-court-reports-page',
-  imports: [RouterLink, Icon, PageHeader, ReportList, EmptyState, ErrorState, SkeletonCards],
+  imports: [RouterLink, Icon, Menu, PageHeader, ReportList, EmptyState, ErrorState, SkeletonCards],
   templateUrl: './court-reports.page.html'
 })
 export class CourtReportsPage {
@@ -86,13 +89,15 @@ export class CourtReportsPage {
     card: CARD,
     pill: PILL,
     ghost: BTN_GHOST,
-    ok: BTN_OK,
-    danger: BTN_DANGER,
     link: BTN_LINK,
     segmented: SEGMENTED,
     segment: SEGMENT,
     segmentActive: SEGMENT_ACTIVE,
-    segmentIdle: SEGMENT_IDLE
+    segmentIdle: SEGMENT_IDLE,
+    menuItem: MENU_ITEM,
+    menuItemOk: MENU_ITEM_OK,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
 
   constructor() {

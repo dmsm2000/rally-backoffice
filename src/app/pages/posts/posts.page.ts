@@ -8,9 +8,25 @@ import { ConfirmService } from '../../ui/confirm.service';
 import { Dialog } from '../../ui/dialog';
 import { Icon } from '../../ui/icon';
 import { Pager, SearchBox } from '../../ui/list-controls';
+import { Menu } from '../../ui/menu';
 import { PageHeader } from '../../ui/page-header';
 import { EmptyState, ErrorState, SkeletonCards } from '../../ui/state-panels';
-import { BTN_DANGER, BTN_GHOST, BTN_LINK, BTN_PRIMARY, CARD, CHIP, CHIP_ACTIVE, CHIP_IDLE, INPUT, LABEL, PILL } from '../../ui/styles';
+import {
+  BTN_DANGER,
+  BTN_GHOST,
+  BTN_LINK,
+  BTN_PRIMARY,
+  CARD,
+  CHIP,
+  CHIP_ACTIVE,
+  CHIP_IDLE,
+  INPUT,
+  LABEL,
+  MENU_DIVIDER,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  PILL
+} from '../../ui/styles';
 import { ToastService } from '../../ui/toast.service';
 
 type Filter = 'all' | 'authored' | 'announcement' | 'reported';
@@ -35,7 +51,7 @@ interface Composer {
 
 @Component({
   selector: 'bo-posts-page',
-  imports: [RouterLink, Icon, Dialog, PageHeader, SearchBox, Pager, EmptyState, ErrorState, SkeletonCards],
+  imports: [RouterLink, Icon, Dialog, Menu, PageHeader, SearchBox, Pager, EmptyState, ErrorState, SkeletonCards],
   templateUrl: './posts.page.html'
 })
 export class PostsPage implements OnDestroy {
@@ -85,7 +101,10 @@ export class PostsPage implements OnDestroy {
     label: LABEL,
     chip: CHIP,
     chipActive: CHIP_ACTIVE,
-    chipIdle: CHIP_IDLE
+    chipIdle: CHIP_IDLE,
+    menuItem: MENU_ITEM,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
 
   private requestId = 0;

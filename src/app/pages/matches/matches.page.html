@@ -79,26 +79,35 @@
               <p class="mt-1 line-clamp-2 text-sm text-faint">“{{ match.note }}”</p>
             }
           </div>
-          <div class="flex shrink-0 flex-wrap gap-2">
+          <bo-menu class="shrink-0">
             @if (match.kind === 'open') {
-              <a [href]="matchUrl(match.id)" target="_blank" rel="noopener" [class]="styles.ghost" title="Ver na app" aria-label="Ver na app">
+              <a [href]="matchUrl(match.id)" target="_blank" rel="noopener" [class]="styles.menuItem">
                 <bo-icon name="external" />
+                Ver na app
               </a>
             }
-            <button type="button" (click)="openEdit(match)" [disabled]="!!busy()" [class]="styles.ghost">
+            <button type="button" (click)="openEdit(match)" [disabled]="!!busy()" [class]="styles.menuItem">
               <bo-icon name="pencil" />
               Editar
             </button>
             @if (match.status === 'complete' && match.keeps_score) {
-              <button type="button" (click)="openResult(match)" [disabled]="!!busy()" [class]="styles.ghost">Resultado</button>
+              <button type="button" (click)="openResult(match)" [disabled]="!!busy()" [class]="styles.menuItem">
+                <bo-icon name="check" />
+                Resultado
+              </button>
             }
             @if (canCancel(match)) {
-              <button type="button" (click)="cancel(match)" [disabled]="!!busy()" [class]="styles.ghost">Cancelar</button>
+              <button type="button" (click)="cancel(match)" [disabled]="!!busy()" [class]="styles.menuItem">
+                <bo-icon name="close" />
+                Cancelar
+              </button>
             }
-            <button type="button" (click)="remove(match)" [disabled]="!!busy()" [class]="styles.danger" aria-label="Apagar partida" title="Apagar partida">
+            <div [class]="styles.menuDivider"></div>
+            <button type="button" (click)="remove(match)" [disabled]="!!busy()" [class]="styles.menuItemDanger">
               <bo-icon name="trash" />
+              Apagar
             </button>
-          </div>
+          </bo-menu>
         </article>
       }
     </div>

@@ -19,6 +19,19 @@ export const SEGMENT = 'cursor-pointer rounded-md px-3 py-1.5 text-sm font-semib
 export const SEGMENT_ACTIVE = 'bg-raised text-fg';
 export const SEGMENT_IDLE = 'text-muted hover:text-fg';
 
+// bo-menu's dropdown panel and item tones — a row's actions live in one of these instead of a
+// button group that wraps to a new line (or stacks) differently from one page to the next.
+// `fixed`, not `absolute`: several cards this sits in (image thumbnails, hero sections) clip
+// overflow for their own rounded corners, which would clip an absolutely-positioned panel too.
+// bo-menu sets its on-screen position itself via inline `top`/`right` styles.
+export const MENU_PANEL = 'fixed z-40 w-52 overflow-hidden rounded-xl border border-line bg-surface py-1.5 shadow-2xl';
+const MENU_ITEM_BASE =
+  'flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40';
+export const MENU_ITEM = `${MENU_ITEM_BASE} text-fg hover:bg-raised`;
+export const MENU_ITEM_OK = `${MENU_ITEM_BASE} text-ok hover:bg-ok/10`;
+export const MENU_ITEM_DANGER = `${MENU_ITEM_BASE} text-danger hover:bg-danger/10`;
+export const MENU_DIVIDER = 'my-1.5 border-t border-line';
+
 export const INPUT =
   'w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm outline-none placeholder:text-faint focus:border-lime disabled:opacity-50';
 export const LABEL = 'eyebrow text-muted';

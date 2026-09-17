@@ -15,15 +15,18 @@ import { PostKind, PostReport, ReportGroup, Resolution, groupReports } from '../
 import { ModerationStore } from '../../core/moderation-store';
 import { ConfirmService } from '../../ui/confirm.service';
 import { Icon } from '../../ui/icon';
+import { Menu } from '../../ui/menu';
 import { PageHeader } from '../../ui/page-header';
 import { ReportList } from '../../ui/report-list';
 import { EmptyState, ErrorState, SkeletonCards } from '../../ui/state-panels';
 import {
-  BTN_DANGER,
   BTN_GHOST,
   BTN_LINK,
-  BTN_OK,
   CARD,
+  MENU_DIVIDER,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_ITEM_OK,
   PILL,
   SEGMENT,
   SEGMENTED,
@@ -43,7 +46,7 @@ const LINKED_RECORD: Record<Exclude<PostKind, 'authored'>, string> = {
 
 @Component({
   selector: 'bo-post-reports-page',
-  imports: [RouterLink, Icon, PageHeader, ReportList, EmptyState, ErrorState, SkeletonCards],
+  imports: [RouterLink, Icon, Menu, PageHeader, ReportList, EmptyState, ErrorState, SkeletonCards],
   templateUrl: './post-reports.page.html'
 })
 export class PostReportsPage {
@@ -89,13 +92,15 @@ export class PostReportsPage {
     card: CARD,
     pill: PILL,
     ghost: BTN_GHOST,
-    ok: BTN_OK,
-    danger: BTN_DANGER,
     link: BTN_LINK,
     segmented: SEGMENTED,
     segment: SEGMENT,
     segmentActive: SEGMENT_ACTIVE,
-    segmentIdle: SEGMENT_IDLE
+    segmentIdle: SEGMENT_IDLE,
+    menuItem: MENU_ITEM,
+    menuItemOk: MENU_ITEM_OK,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
 
   constructor() {

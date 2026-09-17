@@ -18,8 +18,9 @@ import { ModerationStore } from '../../core/moderation-store';
 import { ConfirmService } from '../../ui/confirm.service';
 import { Dialog } from '../../ui/dialog';
 import { Icon } from '../../ui/icon';
+import { Menu } from '../../ui/menu';
 import { ErrorState } from '../../ui/state-panels';
-import { BTN_DANGER, BTN_GHOST, BTN_LINK, BTN_PRIMARY, CARD, PILL } from '../../ui/styles';
+import { BTN_DANGER, BTN_GHOST, BTN_LINK, BTN_PRIMARY, CARD, MENU_DIVIDER, MENU_ITEM, MENU_ITEM_DANGER, PILL } from '../../ui/styles';
 import { ToastService } from '../../ui/toast.service';
 import { CourtFields, EMPTY_COURT, VenueDraft, VenueFields, venueDraft, venueInput } from './venue-fields';
 
@@ -27,7 +28,7 @@ const PHOTO_LIMIT = 10;
 
 @Component({
   selector: 'bo-venue-detail-page',
-  imports: [RouterLink, Icon, Dialog, ErrorState, VenueFields, CourtFields],
+  imports: [RouterLink, Icon, Dialog, Menu, ErrorState, VenueFields, CourtFields],
   templateUrl: './venue-detail.page.html'
 })
 export class VenueDetailPage {
@@ -87,7 +88,10 @@ export class VenueDetailPage {
     ghost: BTN_GHOST,
     primary: BTN_PRIMARY,
     danger: BTN_DANGER,
-    link: BTN_LINK
+    link: BTN_LINK,
+    menuItem: MENU_ITEM,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
 
   constructor() {

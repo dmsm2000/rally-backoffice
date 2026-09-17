@@ -8,10 +8,25 @@ import { ConfirmService } from '../../ui/confirm.service';
 import { Dialog } from '../../ui/dialog';
 import { Icon } from '../../ui/icon';
 import { Pager, SearchBox } from '../../ui/list-controls';
+import { Menu } from '../../ui/menu';
 import { PageHeader } from '../../ui/page-header';
 import { PlaceFields } from '../../ui/place-fields';
 import { EmptyState, ErrorState, SkeletonCards } from '../../ui/state-panels';
-import { BTN_DANGER, BTN_GHOST, BTN_PRIMARY, CARD, CHIP, CHIP_ACTIVE, CHIP_IDLE, INPUT, LABEL, PILL } from '../../ui/styles';
+import {
+  BTN_DANGER,
+  BTN_GHOST,
+  BTN_PRIMARY,
+  CARD,
+  CHIP,
+  CHIP_ACTIVE,
+  CHIP_IDLE,
+  INPUT,
+  LABEL,
+  MENU_DIVIDER,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  PILL
+} from '../../ui/styles';
 import { ToastService } from '../../ui/toast.service';
 
 type When = 'upcoming' | 'past' | 'all';
@@ -39,7 +54,7 @@ function today(): string {
 
 @Component({
   selector: 'bo-trips-page',
-  imports: [RouterLink, Icon, Dialog, PageHeader, SearchBox, Pager, PlaceFields, EmptyState, ErrorState, SkeletonCards],
+  imports: [RouterLink, Icon, Dialog, Menu, PageHeader, SearchBox, Pager, PlaceFields, EmptyState, ErrorState, SkeletonCards],
   templateUrl: './trips.page.html'
 })
 export class TripsPage {
@@ -79,7 +94,10 @@ export class TripsPage {
     label: LABEL,
     chip: CHIP,
     chipActive: CHIP_ACTIVE,
-    chipIdle: CHIP_IDLE
+    chipIdle: CHIP_IDLE,
+    menuItem: MENU_ITEM,
+    menuItemDanger: MENU_ITEM_DANGER,
+    menuDivider: MENU_DIVIDER
   };
 
   private requestId = 0;

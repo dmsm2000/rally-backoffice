@@ -38,7 +38,8 @@ export type IconName =
   | 'plus'
   | 'pencil'
   | 'camera'
-  | 'calendar';
+  | 'calendar'
+  | 'more';
 
 /** Fetches public/icons/<name>.svg once and caches the markup — the same approach as Rally's ui-icon. */
 @Injectable({ providedIn: 'root' })

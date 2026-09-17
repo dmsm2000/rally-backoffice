@@ -38,21 +38,24 @@
             }
           </p>
         </div>
-        <div class="mt-auto flex flex-wrap gap-2">
-          <a [href]="mapsUrl(v.lat, v.lng)" target="_blank" rel="noopener" [class]="styles.ghost">
-            <bo-icon name="map-pin" />
-            Ver no mapa
-          </a>
-          @if (v.status === 'draft') {
-            <button type="button" (click)="verify()" [disabled]="busy()" [class]="styles.ghost">
-              <bo-icon name="shield-check" />
-              Verificar
+        <div class="mt-auto flex">
+          <bo-menu>
+            <a [href]="mapsUrl(v.lat, v.lng)" target="_blank" rel="noopener" [class]="styles.menuItem">
+              <bo-icon name="map-pin" />
+              Ver no mapa
+            </a>
+            @if (v.status === 'draft') {
+              <button type="button" (click)="verify()" [disabled]="busy()" [class]="styles.menuItem">
+                <bo-icon name="shield-check" />
+                Verificar
+              </button>
+            }
+            <div [class]="styles.menuDivider"></div>
+            <button type="button" (click)="removeVenue()" [disabled]="busy()" [class]="styles.menuItemDanger">
+              <bo-icon name="trash" />
+              Apagar local
             </button>
-          }
-          <button type="button" (click)="removeVenue()" [disabled]="busy()" [class]="styles.danger">
-            <bo-icon name="trash" />
-            Apagar local
-          </button>
+          </bo-menu>
         </div>
       </div>
     </div>
@@ -100,20 +103,23 @@
                 }
               </p>
             </div>
-            <div class="flex shrink-0 flex-wrap gap-2">
+            <bo-menu class="shrink-0">
               @if (v.status === 'live') {
-                <a [href]="courtUrl(court.id)" target="_blank" rel="noopener" [class]="styles.ghost" title="Ver na app" aria-label="Ver na app">
+                <a [href]="courtUrl(court.id)" target="_blank" rel="noopener" [class]="styles.menuItem">
                   <bo-icon name="external" />
+                  Ver na app
                 </a>
               }
-              <button type="button" (click)="openCourt(court)" [disabled]="busy()" [class]="styles.ghost">
+              <button type="button" (click)="openCourt(court)" [disabled]="busy()" [class]="styles.menuItem">
                 <bo-icon name="pencil" />
                 Editar
               </button>
-              <button type="button" (click)="removeCourt(court)" [disabled]="busy()" [class]="styles.danger" aria-label="Apagar campo" title="Apagar campo">
+              <div [class]="styles.menuDivider"></div>
+              <button type="button" (click)="removeCourt(court)" [disabled]="busy()" [class]="styles.menuItemDanger">
                 <bo-icon name="trash" />
+                Apagar campo
               </button>
-            </div>
+            </bo-menu>
           </div>
 
           <div class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">

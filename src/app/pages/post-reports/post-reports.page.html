@@ -125,19 +125,21 @@
             </div>
 
             @if (tab() === 'open') {
-              <div class="flex flex-wrap gap-2">
-                <button type="button" (click)="resolve(group, 'dismissed')" [disabled]="busy() === group.key" [class]="styles.ghost" title="Não há nada de errado com esta publicação">
+              <bo-menu>
+                <button type="button" (click)="resolve(group, 'dismissed')" [disabled]="busy() === group.key" [class]="styles.menuItem" title="Não há nada de errado com esta publicação">
+                  <bo-icon name="close" />
                   Ignorar
                 </button>
-                <button type="button" (click)="resolve(group, 'actioned')" [disabled]="busy() === group.key" [class]="styles.ok" title="Já trataste disto de outra forma">
+                <button type="button" (click)="resolve(group, 'actioned')" [disabled]="busy() === group.key" [class]="styles.menuItemOk" title="Já trataste disto de outra forma">
                   <bo-icon name="check" />
                   Tratada
                 </button>
-                <button type="button" (click)="deletePost(group)" [disabled]="busy() === group.key" [class]="styles.danger">
+                <div [class]="styles.menuDivider"></div>
+                <button type="button" (click)="deletePost(group)" [disabled]="busy() === group.key" [class]="styles.menuItemDanger">
                   <bo-icon name="trash" />
                   Apagar publicação
                 </button>
-              </div>
+              </bo-menu>
             } @else {
               <p class="text-sm text-muted">
                 {{ r.resolution === 'dismissed' ? 'Ignorada' : 'Tratada' }}
