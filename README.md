@@ -42,9 +42,7 @@ in SQL first, so a non-admin who opens this app gets nothing.
    Supabase URL and anon key (the same ones Rally uses). The file is gitignored.
 4. `npm install`, then `npm start` → http://localhost:4300
 
-Sign in with the same email/password as in Rally. "Sign in with Google" only works once
-`http://localhost:4300/login` (and any deployed URL) is added to **Authentication → URL
-Configuration → Redirect URLs** in the Supabase dashboard.
+Sign in with the same email/password as in Rally.
 
 ## Commands
 

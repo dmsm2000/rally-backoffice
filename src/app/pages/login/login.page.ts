@@ -43,10 +43,6 @@ export class LoginPage {
     this.submitting.set(false);
   }
 
-  protected async google(): Promise<void> {
-    this.error.set(await this.auth.signInWithGoogle());
-  }
-
   protected async recheck(): Promise<void> {
     this.submitting.set(true);
     await this.auth.refreshAccess();

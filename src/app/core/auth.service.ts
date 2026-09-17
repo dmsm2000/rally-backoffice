@@ -62,14 +62,6 @@ export class AuthService {
     return null;
   }
 
-  async signInWithGoogle(): Promise<string | null> {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: new URL('login', document.baseURI).href }
-    });
-    return error?.message ?? null;
-  }
-
   async signOut(): Promise<void> {
     await supabase.auth.signOut();
     this.session.set(null);
