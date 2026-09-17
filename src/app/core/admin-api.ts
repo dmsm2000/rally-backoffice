@@ -3,6 +3,8 @@ import { PostgrestError } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { isMissingFunction } from './auth.service';
 import {
+  BugReportRow,
+  BugReportStatus,
   CourtInput,
   CourtReport,
   Dashboard,
@@ -58,7 +60,8 @@ const KNOWN_ERRORS: [RegExp, string][] = [
   [/invalid sets|matches_sets_valid/i, 'Os sets não são válidos (1 a 6, números inteiros).'],
   [/posts_has_content/i, 'Uma publicação precisa de texto ou de uma foto/vídeo.'],
   [/landing_waitlist_email_check/i, 'Esse email não é válido.'],
-  [/must be in the (court-photos|feed-media) bucket/i, 'O ficheiro não está no sítio certo do Storage.']
+  [/must be in the (court-photos|feed-media) bucket/i, 'O ficheiro não está no sítio certo do Storage.'],
+  [/invalid bug report status/i, 'Estado inválido.']
 ];
 
 function friendlyError(error: PostgrestError): string {
@@ -368,6 +371,22 @@ export class AdminApi {
 
   async deleteFromWaitlist(id: string): Promise<void> {
     await this.call('admin_delete_waitlist', { p_id: id });
+  }
+
+  // ---- Bug reports ----
+
+  async bugReports(status: BugReportStatus | null, limit: number, offset: number): Promise<Page<BugReportRow>> {
+    return page(
+      await this.call<(BugReportRow & { total_count: number })[]>('admin_bug_reports', {
+        p_status: status,
+        p_limit: limit,
+        p_offset: offset
+      })
+    );
+  }
+
+  async updateBugReportStatus(id: string, status: BugReportStatus): Promise<void> {
+    await this.call('admin_update_bug_report_status', { p_id: id, p_status: status });
   }
 
   // ---- Internals ----

@@ -1,0 +1,113 @@
+<bo-page-header
+  eyebrow="Moderação"
+  title="Bugs reportados"
+  description="Reportados pelos jogadores a partir do perfil: a página onde aconteceu, uma descrição e, opcionalmente, uma foto ou vídeo."
+>
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div [class]="styles.segmented" role="tablist" class="mb-6 inline-flex">
+  <button
+    type="button"
+    role="tab"
+    [attr.aria-selected]="tab() === 'pending'"
+    (click)="setTab('pending')"
+    [class]="styles.segment + ' ' + (tab() === 'pending' ? styles.segmentActive : styles.segmentIdle)"
+  >
+    Pendentes
+  </button>
+  <button
+    type="button"
+    role="tab"
+    [attr.aria-selected]="tab() === 'in_progress'"
+    (click)="setTab('in_progress')"
+    [class]="styles.segment + ' ' + (tab() === 'in_progress' ? styles.segmentActive : styles.segmentIdle)"
+  >
+    Em progresso
+  </button>
+  <button
+    type="button"
+    role="tab"
+    [attr.aria-selected]="tab() === 'solved'"
+    (click)="setTab('solved')"
+    [class]="styles.segment + ' ' + (tab() === 'solved' ? styles.segmentActive : styles.segmentIdle)"
+  >
+    Resolvidos
+  </button>
+</div>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as entries) {
+  @if (!entries.length) {
+    @if (tab() === 'pending') {
+      <bo-empty icon="flag" title="Nenhum bug pendente" body="Quando alguém reportar um a partir da app, aparece aqui." />
+    } @else if (tab() === 'in_progress') {
+      <bo-empty icon="clock" title="Nada em progresso" />
+    } @else {
+      <bo-empty icon="check" title="Nada resolvido ainda" />
+    }
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'bug' : 'bugs' }}</p>
+    <div class="overflow-hidden" [class]="styles.card">
+      <ul class="divide-y divide-line">
+        @for (row of entries; track row.id) {
+          <li class="flex flex-col gap-4 p-5 sm:flex-row" [class.opacity-50]="busy() === row.id">
+            @if (row.media_url; as url) {
+              <div class="aspect-4/3 w-full shrink-0 overflow-hidden rounded-xl bg-raised sm:w-40">
+                @if (row.media_type === 'video') {
+                  <video [src]="url" controls class="size-full object-cover"></video>
+                } @else {
+                  <img [src]="url" alt="" loading="lazy" class="size-full object-cover" />
+                }
+              </div>
+            }
+
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span [class]="styles.pill + ' border-line bg-raised text-muted'">{{ pages[row.page] ?? row.page }}</span>
+                <span [class]="styles.pill + ' ' + tones[statuses[row.status].tone]">{{ statuses[row.status].label }}</span>
+              </div>
+              <p class="mt-2 text-sm whitespace-pre-wrap">{{ row.description }}</p>
+              <p class="mt-2 text-xs text-faint">
+                {{ row.reporter_name ?? 'Conta apagada' }}
+                @if (row.reporter_member_number) {
+                  · {{ memberNumber(row.reporter_member_number) }}
+                }
+                · <span [title]="dateTime(row.created_at)">{{ ago(row.created_at) }}</span>
+              </p>
+            </div>
+
+            <bo-menu>
+              @if (row.status !== 'in_progress') {
+                <button type="button" (click)="setStatus(row, 'in_progress')" [disabled]="busy() === row.id" [class]="styles.menuItem">
+                  <bo-icon name="clock" />
+                  Marcar em progresso
+                </button>
+              }
+              @if (row.status !== 'solved') {
+                <button type="button" (click)="setStatus(row, 'solved')" [disabled]="busy() === row.id" [class]="styles.menuItemOk">
+                  <bo-icon name="check" />
+                  Marcar resolvido
+                </button>
+              }
+              @if (row.status !== 'pending') {
+                <div [class]="styles.menuDivider"></div>
+                <button type="button" (click)="setStatus(row, 'pending')" [disabled]="busy() === row.id" [class]="styles.menuItem">
+                  <bo-icon name="undo" />
+                  Repor como pendente
+                </button>
+              }
+            </bo-menu>
+          </li>
+        }
+      </ul>
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="3" />
+}

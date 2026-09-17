@@ -51,6 +51,12 @@ export class Shell {
           path: '/reports/posts',
           icon: 'image',
           badge: { count: d => d.reported_posts, tone: 'danger' }
+        },
+        {
+          label: 'Bugs reportados',
+          path: '/reports/bugs',
+          icon: 'error-circle',
+          badge: { count: d => d.open_bug_reports, tone: 'warn' }
         }
       ]
     },

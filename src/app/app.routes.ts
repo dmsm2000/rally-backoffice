@@ -25,6 +25,10 @@ export const routes: Routes = [
         loadComponent: async () => (await import('./pages/post-reports/post-reports.page')).PostReportsPage
       },
       {
+        path: 'reports/bugs',
+        loadComponent: async () => (await import('./pages/bug-reports/bug-reports.page')).BugReportsPage
+      },
+      {
         path: 'players',
         loadComponent: async () => (await import('./pages/players/players.page')).PlayersPage
       },

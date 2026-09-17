@@ -1,5 +1,5 @@
 import { IconName } from '../ui/icon';
-import { COURT_REASONS, POST_REASONS, Tone, courtLabel, formatDay, formatSets, formatTime } from './format';
+import { BUG_REPORT_PAGES, BUG_REPORT_STATUS, COURT_REASONS, POST_REASONS, Tone, courtLabel, formatDay, formatSets, formatTime } from './format';
 import { LogAction, LogEntry } from './models';
 
 export type LogCategory = 'moderation' | 'create' | 'update' | 'delete';
@@ -30,7 +30,8 @@ export const LOG_ACTIONS: Record<LogAction, { label: string; icon: IconName; ton
   delete_court_photo: { label: 'Foto de campo apagada', icon: 'trash', tone: 'danger', category: 'delete' },
   delete_match: { label: 'Partida apagada', icon: 'trash', tone: 'danger', category: 'delete' },
   delete_trip: { label: 'Viagem apagada', icon: 'trash', tone: 'danger', category: 'delete' },
-  delete_waitlist: { label: 'Email removido da lista de espera', icon: 'trash', tone: 'danger', category: 'delete' }
+  delete_waitlist: { label: 'Email removido da lista de espera', icon: 'trash', tone: 'danger', category: 'delete' },
+  update_bug_report_status: { label: 'Estado de bug reportado alterado', icon: 'pencil', tone: 'cobalt', category: 'update' }
 };
 
 export interface LogLine {
@@ -133,5 +134,15 @@ export function describeLog(entry: LogEntry): LogLine {
     case 'add_waitlist':
     case 'delete_waitlist':
       return { ...base, detail: text(s, 'email') ?? '', reasons };
+    case 'update_bug_report_status': {
+      const before = text(s, 'before_status');
+      const after = text(s, 'after_status');
+      const transition = before && after ? `${BUG_REPORT_STATUS[before]?.label ?? before} → ${BUG_REPORT_STATUS[after]?.label ?? after}` : after;
+      return {
+        ...base,
+        detail: join(text(s, 'reporter_name') ?? 'Conta apagada', BUG_REPORT_PAGES[text(s, 'page') ?? ''] ?? text(s, 'page'), transition),
+        reasons
+      };
+    }
   }
 }

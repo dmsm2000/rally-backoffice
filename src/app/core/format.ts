@@ -92,6 +92,26 @@ export const RESULT_STATUS: Partial<Record<string, { label: string; tone: Tone }
   disputed: { label: 'Resultado contestado', tone: 'danger' }
 };
 
+// Matches the Rally app's own nav/bugReport.page* copy (rally/CLAUDE.md, Bug Reporting), so a
+// report reads the same here as where it was filed.
+export const BUG_REPORT_PAGES: Partial<Record<string, string>> = {
+  home: 'Início',
+  world: 'Explorar',
+  courts: 'Courts',
+  matches: 'Partidas',
+  passport: 'Passaporte',
+  profile: 'Perfil',
+  messages: 'Mensagens',
+  auth: 'Login / Registo',
+  other: 'Outra'
+};
+
+export const BUG_REPORT_STATUS: Record<string, { label: string; tone: Tone }> = {
+  pending: { label: 'Pendente', tone: 'warn' },
+  in_progress: { label: 'Em progresso', tone: 'cobalt' },
+  solved: { label: 'Resolvido', tone: 'ok' }
+};
+
 export const LOCALES: Partial<Record<string, string>> = {
   pt: 'Português',
   en: 'Inglês',

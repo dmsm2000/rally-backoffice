@@ -27,6 +27,7 @@ export interface Dashboard {
   waitlist: number;
   waitlist_last_7d: number;
   actions_last_7d: number;
+  open_bug_reports: number;
 }
 
 /** A page of a paged list RPC; `total` is the row count before paging. */
@@ -235,6 +236,21 @@ export interface WaitlistRow {
   created_at: string;
 }
 
+export type BugReportStatus = 'pending' | 'in_progress' | 'solved';
+
+export interface BugReportRow {
+  id: string;
+  page: string;
+  description: string;
+  media_url: string | null;
+  media_type: 'image' | 'video' | null;
+  status: BugReportStatus;
+  created_at: string;
+  reporter_id: string | null;
+  reporter_name: string | null;
+  reporter_member_number: number | null;
+}
+
 interface ReportBase {
   id: string;
   reason: string;
@@ -335,7 +351,8 @@ export type LogAction =
   | 'update_trip'
   | 'delete_trip'
   | 'add_waitlist'
-  | 'delete_waitlist';
+  | 'delete_waitlist'
+  | 'update_bug_report_status';
 
 export interface LogEntry {
   id: string;
