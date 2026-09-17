@@ -1,0 +1,173 @@
+<bo-page-header eyebrow="Comunidade" title="Publicações" description="Tudo o que está no feed, incluindo os anúncios automáticos de partidas, viagens e locais.">
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+  <button type="button" (click)="openCreate()" [class]="styles.primary">
+    <bo-icon name="plus" />
+    Nova publicação
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+  <div class="flex flex-wrap gap-2">
+    @for (option of filters; track option.key) {
+      <button
+        type="button"
+        (click)="setFilter(option.param)"
+        [attr.aria-pressed]="filter() === option.key"
+        [class]="styles.chip + ' ' + (filter() === option.key ? styles.chipActive : styles.chipIdle)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+  <bo-search class="lg:w-72" placeholder="Texto ou autor" [value]="search()" (valueChange)="setSearch($event)" />
+</div>
+
+@if (authorName(); as author) {
+  <p class="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted">
+    Só as publicações de <span class="font-semibold text-fg">{{ author }}</span>
+    <button type="button" (click)="clearAuthor()" [class]="styles.pill + ' ' + tones.neutral" class="cursor-pointer hover:text-fg">
+      <bo-icon name="close" size="size-3" />
+      Ver todas
+    </button>
+  </p>
+}
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as posts) {
+  @if (!posts.length) {
+    <bo-empty icon="image" [title]="search() ? 'Nenhuma publicação encontrada' : 'Nenhuma publicação'" [body]="search() ? 'Tenta outro texto ou nome.' : ''" />
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'publicação' : 'publicações' }}</p>
+    <div class="space-y-3">
+      @for (post of posts; track post.id) {
+        <article class="flex flex-col gap-4 p-4 sm:flex-row" [class]="styles.card" [class.opacity-60]="busy() === post.id">
+          @if (post.media_url) {
+            <a [href]="post.media_url" target="_blank" rel="noopener" class="relative block aspect-4/5 w-full shrink-0 overflow-hidden rounded-xl bg-black sm:w-28">
+              @if (post.media_type === 'video') {
+                <video [src]="post.media_url" muted playsinline preload="metadata" class="size-full object-cover"></video>
+                <span class="absolute right-1.5 bottom-1.5 rounded-full bg-black/70 p-1 text-white"><bo-icon name="video" size="size-3.5" /></span>
+              } @else {
+                <img [src]="post.media_url" alt="" loading="lazy" class="size-full object-cover" (error)="$any($event.target).style.visibility = 'hidden'" />
+              }
+            </a>
+          }
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <a [routerLink]="['/players', post.author_id]" class="font-bold hover:underline">{{ name(post.author_name) }}</a>
+              @if (post.author_member_number != null) {
+                <span class="font-mono text-xs text-faint">{{ member(post.author_member_number) }}</span>
+              }
+              <span class="text-xs text-faint" [title]="dateTime(post.created_at)">· {{ ago(post.created_at) }}</span>
+            </div>
+            <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+              @if (post.kind !== 'authored') {
+                <span [class]="styles.pill + ' ' + tones.cobalt">{{ kinds[post.kind] }}{{ post.linked_label ? ' · ' + post.linked_label : '' }}</span>
+              }
+              @if (post.post_type) {
+                <span [class]="styles.pill + ' ' + tones.neutral">{{ types[post.post_type] ?? post.post_type }}</span>
+              }
+              @if (post.open_reports) {
+                <a routerLink="/reports/posts" [class]="styles.pill + ' ' + tones.danger" class="hover:underline">
+                  <bo-icon name="flag" size="size-3" />
+                  {{ post.open_reports }} {{ post.open_reports === 1 ? 'denúncia' : 'denúncias' }}
+                </a>
+              }
+            </div>
+            @if (post.post_text.trim()) {
+              <p class="mt-2 line-clamp-4 text-sm whitespace-pre-line">{{ post.post_text }}</p>
+            }
+            <p class="mt-2 text-xs text-faint">{{ post.likes }} {{ post.likes === 1 ? 'gosto' : 'gostos' }}</p>
+          </div>
+          <div class="flex shrink-0 flex-wrap items-start gap-2 sm:flex-col sm:items-stretch">
+            <a [href]="postUrl(post.id)" target="_blank" rel="noopener" [class]="styles.ghost">
+              <bo-icon name="external" />
+              Ver
+            </a>
+            @if (post.kind === 'authored') {
+              <button type="button" (click)="openEdit(post)" [disabled]="!!busy()" [class]="styles.ghost">
+                <bo-icon name="pencil" />
+                Editar
+              </button>
+            }
+            <button type="button" (click)="remove(post)" [disabled]="!!busy()" [class]="styles.danger">
+              <bo-icon name="trash" />
+              Apagar
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}
+
+@if (composer(); as c) {
+  <bo-dialog
+    eyebrow="Publicação"
+    [title]="c.mode === 'create' ? 'Nova publicação' : 'Editar publicação'"
+    (closed)="closeComposer()"
+  >
+    @if (c.mode === 'create') {
+      <p class="mb-4 rounded-lg border border-line bg-bg/60 px-3 py-2 text-xs text-muted">
+        Fica publicada em nome da tua conta Rally, como se usasses a app.
+      </p>
+    } @else {
+      <p class="mb-4 text-sm text-muted">De {{ name(c.post?.author_name) }}. A foto ou vídeo não muda.</p>
+    }
+
+    <label class="block space-y-1.5">
+      <span class="flex justify-between">
+        <span [class]="styles.label">Texto</span>
+        <span class="font-mono text-xs" [class]="c.text.length > textMax ? 'text-danger' : 'text-faint'">{{ c.text.length }}/{{ textMax }}</span>
+      </span>
+      <textarea rows="4" [value]="c.text" (input)="patchComposer({ text: $any($event.target).value })" [class]="styles.input"></textarea>
+    </label>
+
+    <label class="mt-4 block space-y-1.5">
+      <span [class]="styles.label">Tipo</span>
+      <select class="bo-select" [value]="c.type" (change)="patchComposer({ type: $any($event.target).value })" [class]="styles.input">
+        <option value="" [selected]="!c.type">Sem tipo</option>
+        @for (option of typeOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === c.type">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+
+    @if (c.mode === 'create') {
+      <div class="mt-4">
+        <span [class]="styles.label">Foto ou vídeo</span>
+        @if (c.preview) {
+          <div class="relative mt-1.5 w-40 overflow-hidden rounded-xl bg-black">
+            @if (c.file?.type?.startsWith('video/')) {
+              <video [src]="c.preview" muted playsinline controls class="aspect-4/5 w-full object-cover"></video>
+            } @else {
+              <img [src]="c.preview" alt="" class="aspect-4/5 w-full object-cover" />
+            }
+            <button type="button" (click)="removeFile()" aria-label="Remover ficheiro" class="absolute top-1.5 right-1.5 flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/70 text-white hover:bg-danger">
+              <bo-icon name="close" size="size-3.5" />
+            </button>
+          </div>
+        } @else {
+          <label class="mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-line px-3 py-3 text-sm text-muted hover:border-fg/40 hover:text-fg">
+            <bo-icon name="camera" />
+            Escolher ficheiro (opcional)
+            <input type="file" accept="image/*,video/*" class="sr-only" (change)="pickFile($any($event.target))" />
+          </label>
+        }
+      </div>
+    }
+
+    <ng-container dialog-actions>
+      <button type="button" (click)="closeComposer()" [class]="styles.ghost">Cancelar</button>
+      <button type="button" (click)="submitComposer()" [disabled]="!canSubmit(c) || busy() === 'composer'" [class]="styles.primary">
+        {{ busy() === 'composer' ? 'A guardar…' : c.mode === 'create' ? 'Publicar' : 'Guardar' }}
+      </button>
+    </ng-container>
+  </bo-dialog>
+}

@@ -1,0 +1,95 @@
+<bo-page-header eyebrow="Comunidade" title="Jogadores" description="Todas as contas com perfil. Abre um jogador para editar, bloquear ou apagar.">
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+  <div class="flex flex-wrap gap-2">
+    @for (option of filters; track option.key) {
+      <button
+        type="button"
+        (click)="setFilter(option.param)"
+        [attr.aria-pressed]="filter() === option.key"
+        [class]="styles.chip + ' ' + (filter() === option.key ? styles.chipActive : styles.chipIdle)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+  <bo-search class="lg:w-80" placeholder="Nome, email, cidade ou nº de sócio" [value]="search()" (valueChange)="setSearch($event)" />
+</div>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as players) {
+  @if (!players.length) {
+    <bo-empty
+      icon="users"
+      [title]="search() ? 'Nenhum jogador encontrado' : filter() === 'blocked' ? 'Nenhum jogador bloqueado' : 'Nenhum jogador'"
+      [body]="search() ? 'Tenta outro nome, email ou número.' : ''"
+    />
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'jogador' : 'jogadores' }}</p>
+    <div class="overflow-hidden" [class]="styles.card">
+      <div class="hidden grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)_7rem_7rem_4.5rem_4.5rem_1.5rem] gap-4 border-b border-line px-5 py-3 lg:grid">
+        <span class="eyebrow text-faint">Jogador</span>
+        <span class="eyebrow text-faint">Localização</span>
+        <span class="eyebrow text-faint">Registo</span>
+        <span class="eyebrow text-faint">Última entrada</span>
+        <span class="eyebrow text-right text-faint">Posts</span>
+        <span class="eyebrow text-right text-faint">Partidas</span>
+        <span></span>
+      </div>
+      <ul class="divide-y divide-line">
+        @for (player of players; track player.id) {
+          <li>
+            <a
+              [routerLink]="['/players', player.id]"
+              class="grid grid-cols-[2.5rem_minmax(0,1fr)_1.25rem] items-center gap-x-3 gap-y-1 px-5 py-3.5 transition-colors hover:bg-raised/50 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)_7rem_7rem_4.5rem_4.5rem_1.5rem] lg:gap-4"
+            >
+              <div class="contents lg:flex lg:min-w-0 lg:items-center lg:gap-3">
+                <span
+                  class="row-span-2 flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold lg:row-span-1"
+                  [class]="player.blocked_at ? 'bg-warn/15 text-warn' : 'bg-raised text-fg'"
+                >
+                  {{ initials(player.first_name, player.last_name) }}
+                </span>
+                <div class="min-w-0">
+                  <p class="flex min-w-0 items-center gap-2">
+                    <span class="truncate font-bold">{{ player.first_name }} {{ player.last_name }}</span>
+                    @if (player.is_admin) {
+                      <span [class]="styles.pill + ' ' + tones.lime">Admin</span>
+                    }
+                    @if (player.blocked_at) {
+                      <span [class]="styles.pill + ' ' + tones.warn">Bloqueada</span>
+                    }
+                  </p>
+                  <p class="truncate text-xs text-muted">
+                    <span class="font-mono text-faint">{{ member(player.member_number) }}</span> · {{ player.email ?? 'sem email' }}
+                  </p>
+                </div>
+              </div>
+              <span class="row-start-1 col-start-3 text-faint lg:hidden"><bo-icon name="chevron-right" /></span>
+              <p class="col-start-2 truncate text-xs text-muted lg:col-auto lg:text-sm">
+                {{ player.city ?? '—' }}{{ player.country ? ', ' + player.country : '' }}
+                <span class="lg:hidden"> · registo {{ date(player.created_at) }}</span>
+              </p>
+              <p class="hidden text-sm text-muted lg:block" [title]="dateTime(player.created_at)">{{ date(player.created_at) }}</p>
+              <p class="hidden text-sm text-muted lg:block" [title]="player.last_sign_in_at ? dateTime(player.last_sign_in_at) : ''">
+                {{ player.last_sign_in_at ? ago(player.last_sign_in_at) : 'nunca' }}
+              </p>
+              <p class="hidden text-right font-mono text-sm lg:block">{{ player.posts }}</p>
+              <p class="hidden text-right font-mono text-sm lg:block">{{ player.matches }}</p>
+              <span class="hidden text-faint lg:block"><bo-icon name="chevron-right" /></span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}

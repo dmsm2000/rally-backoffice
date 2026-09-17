@@ -1,0 +1,77 @@
+<bo-page-header
+  eyebrow="Registo"
+  title="Histórico"
+  description="Cada ação tomada no backoffice, com uma cópia do que foi afetado — o que foi apagado já não existe noutro sítio."
+>
+  <button type="button" (click)="load()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-wrap gap-2">
+  @for (option of filters; track option.key) {
+    <button
+      type="button"
+      (click)="filter.set(option.key)"
+      [attr.aria-pressed]="filter() === option.key"
+      class="cursor-pointer rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors"
+      [class]="filter() === option.key ? 'border-fg bg-fg text-bg' : 'border-line text-muted hover:border-fg/40 hover:text-fg'"
+    >
+      {{ option.label }}
+    </button>
+  }
+</div>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="load()" />
+} @else if (days(); as days) {
+  @if (!days.length) {
+    <bo-empty icon="clock" title="Sem ações registadas" body="Ignorar, tratar ou apagar alguma coisa deixa uma entrada aqui." />
+  } @else {
+    <div class="space-y-8">
+      @for (day of days; track day.label) {
+        <section>
+          <h2 class="eyebrow mb-3 text-faint">{{ day.label }}</h2>
+          <ol [class]="styles.card" class="divide-y divide-line">
+            @for (item of day.entries; track item.entry.id) {
+              <li class="px-5 py-4">
+                <div class="flex items-start gap-3">
+                  <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border" [class]="tones[item.line.tone]">
+                    <bo-icon [name]="item.line.icon" />
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                      <p class="font-semibold">{{ item.line.title }}</p>
+                      <span class="font-mono text-xs text-faint" [title]="dateTime(item.entry.created_at)">{{ item.time }}</span>
+                    </div>
+                    <p class="mt-0.5 text-sm text-muted">{{ item.line.detail }}</p>
+                    @if (item.line.reasons.length) {
+                      <div class="mt-2 flex flex-wrap gap-1.5">
+                        @for (reason of item.line.reasons; track reason) {
+                          <span [class]="styles.pill + ' ' + tones.neutral">{{ reason }}</span>
+                        }
+                      </div>
+                    }
+                    <details class="group mt-2">
+                      <summary class="cursor-pointer list-none text-xs font-semibold text-faint hover:text-muted">
+                        <span class="group-open:hidden">Ver detalhes</span>
+                        <span class="hidden group-open:inline">Esconder detalhes</span>
+                        @if (item.entry.admin_name) {
+                          · por {{ item.entry.admin_name }}
+                        }
+                      </summary>
+                      <pre class="mt-2 overflow-x-auto rounded-lg border border-line bg-bg p-3 font-mono text-xs leading-relaxed text-muted">{{ item.entry.summary | json }}</pre>
+                    </details>
+                  </div>
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+    </div>
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}

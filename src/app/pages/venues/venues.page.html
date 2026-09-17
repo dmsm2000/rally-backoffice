@@ -1,0 +1,173 @@
+<bo-page-header
+  eyebrow="Catálogo"
+  title="Locais"
+  description="Todos os locais, incluindo rascunhos que a app só mostra a quem está a 250 m. Um rascunho registado longe do campo nunca é confirmado e fica aqui para sempre."
+>
+  <button type="button" (click)="load()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+  <a routerLink="/venues/new" [class]="styles.primary">
+    <bo-icon name="plus" />
+    Novo local
+  </a>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+  <div class="flex flex-wrap gap-2">
+    @for (option of filters; track option.key) {
+      <button
+        type="button"
+        (click)="setFilter(option.key)"
+        [attr.aria-pressed]="filter() === option.key"
+        class="cursor-pointer rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors"
+        [class]="filter() === option.key ? 'border-fg bg-fg text-bg' : 'border-line text-muted hover:border-fg/40 hover:text-fg'"
+      >
+        {{ option.label }}
+        <span class="ml-0.5 font-mono text-xs opacity-70">{{ counts()[option.key] }}</span>
+      </button>
+    }
+  </div>
+
+  <label class="relative block lg:w-72">
+    <span class="sr-only">Pesquisar locais</span>
+    <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint"><bo-icon name="search" /></span>
+    <input
+      type="search"
+      placeholder="Nome, cidade ou país"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+      class="w-full rounded-lg border border-line bg-surface py-2 pr-3 pl-9 text-sm outline-none placeholder:text-faint focus:border-lime"
+    />
+  </label>
+</div>
+
+@if (filter() === 'stale' && counts().stale > 0) {
+  <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-warn/30 bg-warn/8 p-4 sm:flex-row sm:items-center">
+    <p class="flex-1 text-sm">
+      <span class="font-bold">{{ counts().stale }} {{ counts().stale === 1 ? 'rascunho' : 'rascunhos' }}</span>
+      por confirmar há mais de {{ staleDays }} dias. Quase sempre são registos feitos longe do campo, que ninguém vai confirmar.
+    </p>
+    <button type="button" (click)="deleteStaleDrafts()" [disabled]="!!bulk()" [class]="styles.danger">
+      <bo-icon name="trash" />
+      @if (bulk(); as progress) {
+        A apagar {{ progress.done }}/{{ progress.total }}…
+      } @else {
+        Apagar todos
+      }
+    </button>
+  </div>
+}
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="load()" />
+} @else if (visible(); as venues) {
+  @if (!venues.length) {
+    <bo-empty
+      icon="map-pin"
+      [title]="search() ? 'Nenhum local encontrado' : filter() === 'stale' ? 'Nenhum rascunho abandonado' : 'Nenhum local'"
+      [body]="search() ? 'Tenta outro nome, cidade ou país.' : ''"
+    />
+  } @else {
+    <div class="overflow-hidden" [class]="styles.card">
+      <div class="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_5rem_5rem_6rem_7.5rem] gap-4 border-b border-line px-5 py-3 lg:grid">
+        <span class="eyebrow text-faint">Local</span>
+        <span class="eyebrow text-faint">Estado</span>
+        <span class="eyebrow text-right text-faint">Campos</span>
+        <span class="eyebrow text-right text-faint">Capturas</span>
+        <span class="eyebrow text-right text-faint">Denúncias</span>
+        <span class="sr-only">Ações</span>
+      </div>
+
+      <ul class="divide-y divide-line">
+        @for (venue of venues; track venue.id) {
+          <li
+            class="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 px-5 py-4 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_5rem_5rem_6rem_7.5rem] lg:items-center"
+            [class.opacity-50]="busy() === venue.id"
+          >
+            <div class="col-span-2 flex min-w-0 items-center gap-3 lg:col-span-1">
+              <div class="size-14 shrink-0 overflow-hidden rounded-lg bg-raised">
+                @if (venue.cover_url) {
+                  <img [src]="venue.cover_url" alt="" loading="lazy" class="size-full object-cover" (error)="$any($event.target).style.visibility = 'hidden'" />
+                } @else {
+                  <div class="flex size-full items-center justify-center text-faint"><bo-icon name="courts" size="size-5" /></div>
+                }
+              </div>
+              <div class="min-w-0">
+                <a [routerLink]="['/venues', venue.id]" class="block truncate font-bold hover:underline">{{ venue.name }}</a>
+                <p class="truncate text-sm text-muted">
+                  {{ venue.flag }} {{ venue.city }}, {{ venue.country }} · {{ kinds[venue.kind] ?? venue.kind }}
+                </p>
+                <p class="truncate text-xs text-faint">
+                  {{ venue.creator_name ?? 'Conta apagada' }}
+                  @if (venue.creator_member_number != null) {
+                    <span class="font-mono">{{ member(venue.creator_member_number) }}</span>
+                  }
+                  · <span [title]="dateTime(venue.created_at)">{{ date(venue.created_at) }}</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="col-span-2 flex flex-wrap items-center gap-2 lg:col-span-1">
+              @if (venue.status === 'live') {
+                <span [class]="styles.pill + ' ' + tones.ok">
+                  <bo-icon name="check" size="size-3" />
+                  Verificado
+                </span>
+              } @else if (isStale(venue)) {
+                <span [class]="styles.pill + ' ' + tones.warn">Rascunho · {{ days(venue.created_at) }} dias</span>
+              } @else {
+                <span [class]="styles.pill + ' ' + tones.neutral">Rascunho {{ venue.confirmations }}/2</span>
+              }
+              @if (venue.registered_accuracy_m != null && venue.registered_accuracy_m > 100) {
+                <span [class]="styles.pill + ' ' + tones.warn" title="Precisão do GPS quando foi registado">
+                  GPS ± {{ round(venue.registered_accuracy_m) }} m
+                </span>
+              }
+            </div>
+
+            <div class="col-span-2 flex items-center justify-between gap-3 lg:contents">
+              <p class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted lg:contents">
+                <span class="lg:text-right"><span class="font-mono text-fg">{{ venue.court_count }}</span><span class="lg:hidden"> {{ venue.court_count === 1 ? 'campo' : 'campos' }}</span></span>
+                <span class="lg:text-right"><span class="font-mono text-fg">{{ venue.capture_total }}</span><span class="lg:hidden"> {{ venue.capture_total === 1 ? 'captura' : 'capturas' }}</span></span>
+                <span class="lg:text-right">
+                  @if (venue.open_reports) {
+                    <a routerLink="/reports/courts" class="font-mono font-bold text-danger hover:underline">{{ venue.open_reports }}</a>
+                  } @else {
+                    <span class="font-mono text-faint">0</span>
+                  }
+                  <span class="lg:hidden"> {{ venue.open_reports === 1 ? 'denúncia' : 'denúncias' }}</span>
+                </span>
+              </p>
+
+              <div class="flex shrink-0 justify-end gap-2">
+                <a
+                  [href]="mapsUrl(venue.lat, venue.lng)"
+                  target="_blank"
+                  rel="noopener"
+                  title="Ver no mapa"
+                  aria-label="Ver no mapa"
+                  class="flex size-9 items-center justify-center rounded-lg border border-line text-muted hover:bg-raised hover:text-fg"
+                >
+                  <bo-icon name="map-pin" />
+                </a>
+                <button
+                  type="button"
+                  (click)="deleteVenue(venue)"
+                  [disabled]="busy() === venue.id || !!bulk()"
+                  title="Apagar local"
+                  aria-label="Apagar local"
+                  class="flex size-9 cursor-pointer items-center justify-center rounded-lg border border-danger/35 text-danger hover:bg-danger/12 disabled:opacity-40"
+                >
+                  <bo-icon name="trash" />
+                </button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}

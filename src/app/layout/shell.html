@@ -1,0 +1,110 @@
+<div class="min-h-dvh lg:grid lg:grid-cols-[16.5rem_minmax(0,1fr)]">
+  <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-bg/90 px-4 backdrop-blur lg:hidden">
+    <button
+      type="button"
+      (click)="menuOpen.set(true)"
+      aria-label="Abrir menu"
+      class="-ml-1 flex size-9 cursor-pointer items-center justify-center rounded-lg hover:bg-raised"
+    >
+      <bo-icon name="menu" size="size-5" />
+    </button>
+    <img src="rally-logo-white.svg" alt="" class="size-6" />
+    <span class="font-bold">Backoffice</span>
+  </header>
+
+  @if (menuOpen()) {
+    <div class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" (click)="menuOpen.set(false)"></div>
+  }
+
+  <aside
+    class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-line bg-surface transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-auto lg:translate-x-0"
+    [class]="menuOpen() ? 'translate-x-0' : '-translate-x-full'"
+    aria-label="Menu"
+  >
+    <div class="flex items-center gap-3 px-5 pt-6 pb-5">
+      <img src="rally-logo-white.svg" alt="" class="size-8" />
+      <div class="min-w-0">
+        <p class="display text-lg">Rally</p>
+        <p class="eyebrow text-lime">Backoffice</p>
+      </div>
+      <button
+        type="button"
+        (click)="menuOpen.set(false)"
+        aria-label="Fechar menu"
+        class="ml-auto flex size-9 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-raised hover:text-fg lg:hidden"
+      >
+        <bo-icon name="close" />
+      </button>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto px-3 pb-4">
+      @for (section of sections; track $index) {
+        @if (section.title) {
+          <p class="eyebrow mt-6 mb-2 px-3 text-faint">{{ section.title }}</p>
+        }
+        <ul class="space-y-0.5">
+          @for (item of section.items; track item.path) {
+            <li>
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="bg-raised text-fg"
+                [routerLinkActiveOptions]="{ exact: !!item.exact }"
+                #rla="routerLinkActive"
+                [attr.aria-current]="rla.isActive ? 'page' : null"
+                class="group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-raised/60 hover:text-fg"
+              >
+                @if (rla.isActive) {
+                  <span class="absolute top-2 bottom-2 -left-3 w-1 rounded-r-full bg-lime"></span>
+                }
+                <span [class]="rla.isActive ? 'text-lime' : ''"><bo-icon [name]="item.icon" /></span>
+                <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+                @if (badgeCount(item); as count) {
+                  <span
+                    class="min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs font-bold"
+                    [class]="item.badge?.tone === 'danger' ? 'bg-danger text-white' : 'bg-warn/20 text-warn'"
+                  >
+                    {{ count }}
+                  </span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </nav>
+
+    <div class="border-t border-line p-3">
+      <a
+        [href]="rallyUrl"
+        target="_blank"
+        rel="noopener"
+        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-raised/60 hover:text-fg"
+      >
+        <bo-icon name="external" />
+        Abrir a app Rally
+      </a>
+      <div class="mt-2 flex items-center gap-3 rounded-lg px-3 py-2">
+        <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-lime text-sm font-bold text-bg">{{ initials() }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold">{{ auth.email() }}</p>
+          <p class="eyebrow text-faint">Admin</p>
+        </div>
+        <button
+          type="button"
+          (click)="signOut()"
+          aria-label="Sair"
+          title="Sair"
+          class="flex size-9 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-raised hover:text-fg"
+        >
+          <bo-icon name="log-out" />
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="min-w-0 px-4 pt-6 pb-16 sm:px-8 lg:pt-10">
+    <div class="mx-auto max-w-6xl">
+      <router-outlet />
+    </div>
+  </main>
+</div>

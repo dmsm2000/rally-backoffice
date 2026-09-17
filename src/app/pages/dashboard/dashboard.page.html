@@ -1,0 +1,122 @@
+<bo-page-header eyebrow="Backoffice" title="Painel" description="O que precisa de atenção, e como está a comunidade.">
+  <button type="button" (click)="refresh()" [disabled]="refreshing()" [class]="btnGhost">
+    <span [class.animate-spin]="refreshing()"><bo-icon name="refresh" /></span>
+    Atualizar
+  </button>
+</bo-page-header>
+
+@if (store.error(); as error) {
+  <bo-error class="mb-8" [message]="error" (retry)="refresh()" />
+}
+
+<section aria-labelledby="queue-title">
+  <h2 id="queue-title" class="eyebrow mb-3 text-faint">Por moderar</h2>
+  <div class="grid gap-4 md:grid-cols-3">
+    @if (queue(); as cards) {
+      @for (item of cards; track item.label) {
+        <a
+          [routerLink]="item.link"
+          [queryParams]="item.queryParams"
+          class="group relative overflow-hidden p-5 transition-colors hover:border-fg/25"
+          [class]="card"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <p class="text-sm font-semibold text-muted">{{ item.label }}</p>
+            <span class="flex size-9 items-center justify-center rounded-full border" [class]="toneClasses[item.tone]">
+              <bo-icon [name]="item.icon" />
+            </span>
+          </div>
+          <p class="display mt-3 text-5xl" [class]="item.value ? '' : 'text-faint'">{{ n(item.value) }}</p>
+          <p class="mt-1 text-sm" [class]="item.value ? 'text-fg' : 'text-ok'">{{ item.detail }}</p>
+          <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-lime opacity-80 group-hover:opacity-100">
+            Abrir
+            <span class="-rotate-90"><bo-icon name="chevron-down" /></span>
+          </span>
+        </a>
+      }
+    } @else {
+      @for (i of [0, 1, 2]; track i) {
+        <div class="h-44 animate-pulse" [class]="card"></div>
+      }
+    }
+  </div>
+</section>
+
+<section class="mt-10 grid gap-4 lg:grid-cols-2" aria-label="Motivos das denúncias abertas">
+  @for (panel of reasonPanels(); track panel.title) {
+    <div class="p-5" [class]="card">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold">{{ panel.title }}</h2>
+        <a [routerLink]="panel.link" [class]="btnLink">Ver</a>
+      </div>
+      @if (panel.bars.length) {
+        <ul class="mt-4 space-y-3">
+          @for (bar of panel.bars; track bar.label) {
+            <li>
+              <div class="flex items-baseline justify-between gap-3 text-sm">
+                <span class="truncate">{{ bar.label }}</span>
+                <span class="font-mono text-xs text-muted">{{ bar.count }} · {{ bar.percent }}%</span>
+              </div>
+              <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-raised">
+                <div class="h-full rounded-full" [class]="bar.bar" [style.width.%]="bar.percent"></div>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="mt-4 text-sm text-muted">{{ store.dashboard() ? 'Sem denúncias abertas.' : 'A carregar…' }}</p>
+      }
+    </div>
+  }
+</section>
+
+<section class="mt-10" aria-labelledby="community-title">
+  <h2 id="community-title" class="eyebrow mb-3 text-faint">Comunidade</h2>
+  <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+    @if (community(); as stats) {
+      @for (stat of stats; track stat.label) {
+        <a [routerLink]="stat.link" class="p-4 transition-colors hover:border-fg/25" [class]="card">
+          <p class="text-xs font-semibold text-muted">{{ stat.label }}</p>
+          <p class="display mt-2 text-3xl" [class]="stat.accent">{{ n(stat.value) }}</p>
+          <p class="mt-1 text-xs text-faint">{{ stat.detail }}</p>
+        </a>
+      }
+    } @else {
+      @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) {
+        <div class="h-28 animate-pulse" [class]="card"></div>
+      }
+    }
+  </div>
+</section>
+
+<section class="mt-10" aria-labelledby="activity-title">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 id="activity-title" class="eyebrow text-faint">Atividade recente</h2>
+    <a routerLink="/activity" [class]="btnLink">Ver histórico</a>
+  </div>
+  <div [class]="card">
+    @if (log(); as entries) {
+      @if (entries.length) {
+        <ul class="divide-y divide-line">
+          @for (entry of entries; track entry.id) {
+            @let line = describe(entry);
+            <li class="flex items-start gap-3 px-5 py-3.5">
+              <span class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border" [class]="toneClasses[line.tone]">
+                <bo-icon [name]="line.icon" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold">{{ line.title }}</p>
+                <p class="truncate text-sm text-muted">{{ line.detail }}</p>
+              </div>
+              <span class="shrink-0 text-xs text-faint">{{ timeAgo(entry.created_at) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="px-5 py-6 text-sm text-muted">Ainda não há ações registadas. O que fizeres aqui aparece nesta lista.</p>
+      }
+    } @else {
+      <div class="h-40 animate-pulse"></div>
+    }
+  </div>
+</section>

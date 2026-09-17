@@ -1,0 +1,204 @@
+<bo-page-header eyebrow="Comunidade" title="Partidas" description="Convites, partidas em aberto e resultados. Os resultados só se corrigem em jogos de singulares já terminados.">
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+  <div class="flex flex-wrap gap-2">
+    @for (option of filters; track option.label) {
+      <button
+        type="button"
+        (click)="setFilter(option.param)"
+        [attr.aria-pressed]="status() === option.status"
+        [class]="styles.chip + ' ' + (status() === option.status ? styles.chipActive : styles.chipIdle)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+  <bo-search class="xl:w-72" placeholder="Jogador, cidade ou nota" [value]="search()" (valueChange)="setSearch($event)" />
+</div>
+
+@if (playerParam()) {
+  <p class="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted">
+    Só as partidas de um jogador
+    <button type="button" (click)="clearPlayer()" [class]="styles.pill + ' ' + tones.neutral" class="cursor-pointer hover:text-fg">
+      <bo-icon name="close" size="size-3" />
+      Ver todas
+    </button>
+  </p>
+}
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as matches) {
+  @if (!matches.length) {
+    <bo-empty icon="matches" [title]="search() ? 'Nenhuma partida encontrada' : 'Nenhuma partida'" />
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'partida' : 'partidas' }}</p>
+    <div class="space-y-3">
+      @for (match of matches; track match.id) {
+        <article class="flex flex-col gap-4 p-4 lg:flex-row lg:items-center" [class]="styles.card" [class.opacity-60]="busy() === match.id">
+          <div class="flex shrink-0 items-center gap-3 lg:w-36 lg:flex-col lg:items-start lg:gap-0">
+            <p class="font-bold">{{ day(match.match_date) }}</p>
+            <p class="font-mono text-sm text-muted">{{ time(match.match_time) }}{{ match.match_time_end ? '–' + time(match.match_time_end) : '' }}</p>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span [class]="styles.pill + ' ' + tones[statuses[match.status].tone]">{{ statuses[match.status].label }}</span>
+              <span [class]="styles.pill + ' ' + tones.neutral">{{ sessions[match.session_type ?? 'FullMatch'] ?? match.session_type }} · {{ formats[match.format] ?? match.format }}</span>
+              @if (match.result_status && results[match.result_status]; as result) {
+                <span [class]="styles.pill + ' ' + tones[result.tone]">{{ result.label }}</span>
+              }
+            </div>
+            <p class="mt-1.5 font-semibold">
+              @if (match.format === 'Doubles') {
+                {{ players(match) }}
+              } @else {
+                <a [routerLink]="['/players', match.player_a]" class="hover:underline">{{ name(match.player_a_name) }}</a>
+                @if (match.player_b) {
+                  <span class="text-muted"> vs </span>
+                  <a [routerLink]="['/players', match.player_b]" class="hover:underline">{{ name(match.player_b_name) }}</a>
+                } @else {
+                  <span class="font-normal text-muted"> · à procura de adversário</span>
+                }
+              }
+            </p>
+            <p class="mt-0.5 text-sm text-muted">
+              {{ match.city }}, {{ match.country }}{{ match.court_venue_name ? ' · ' + match.court_venue_name + ', ' + courtLabel(match.court_number) : '' }}
+              @if (match.status === 'complete' && (match.sets?.length || match.winner)) {
+                · <span class="font-mono text-fg">{{ sets(match.sets) }}</span>
+                @if (winnerName(match); as winner) {
+                  · venceu {{ winner }}
+                }
+              }
+            </p>
+            @if (match.note) {
+              <p class="mt-1 line-clamp-2 text-sm text-faint">“{{ match.note }}”</p>
+            }
+          </div>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            @if (match.kind === 'open') {
+              <a [href]="matchUrl(match.id)" target="_blank" rel="noopener" [class]="styles.ghost" title="Ver na app" aria-label="Ver na app">
+                <bo-icon name="external" />
+              </a>
+            }
+            <button type="button" (click)="openEdit(match)" [disabled]="!!busy()" [class]="styles.ghost">
+              <bo-icon name="pencil" />
+              Editar
+            </button>
+            @if (match.status === 'complete' && match.keeps_score) {
+              <button type="button" (click)="openResult(match)" [disabled]="!!busy()" [class]="styles.ghost">Resultado</button>
+            }
+            @if (canCancel(match)) {
+              <button type="button" (click)="cancel(match)" [disabled]="!!busy()" [class]="styles.ghost">Cancelar</button>
+            }
+            <button type="button" (click)="remove(match)" [disabled]="!!busy()" [class]="styles.danger" aria-label="Apagar partida" title="Apagar partida">
+              <bo-icon name="trash" />
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}
+
+@if (edit(); as d) {
+  <bo-dialog eyebrow="Partida" [title]="players(d.match)" (closed)="edit.set(null)">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <label class="block space-y-1.5">
+        <span [class]="styles.label">Dia</span>
+        <input type="date" [value]="d.date" (input)="patchEdit({ date: $any($event.target).value })" [class]="styles.input" />
+      </label>
+      <label class="block space-y-1.5">
+        <span [class]="styles.label">Início</span>
+        <input type="time" [value]="d.time" (input)="patchEdit({ time: $any($event.target).value })" [class]="styles.input" />
+      </label>
+      <label class="block space-y-1.5">
+        <span [class]="styles.label">Fim (opcional)</span>
+        <input type="time" [value]="d.timeEnd" (input)="patchEdit({ timeEnd: $any($event.target).value })" [class]="styles.input" />
+      </label>
+    </div>
+    <label class="mt-4 block space-y-1.5 sm:w-1/3">
+      <span [class]="styles.label">Duração (min)</span>
+      <input type="number" min="1" max="1440" [value]="d.duration" (input)="patchEdit({ duration: $any($event.target).value })" [class]="styles.input" />
+    </label>
+    <bo-place-fields class="mt-4" [country]="d.country" (countryChange)="patchEdit({ country: $event })" [city]="d.city" (cityChange)="patchEdit({ city: $event })" />
+    <label class="mt-4 block space-y-1.5">
+      <span [class]="styles.label">Nota</span>
+      <textarea rows="2" maxlength="500" [value]="d.note" (input)="patchEdit({ note: $any($event.target).value })" [class]="styles.input"></textarea>
+    </label>
+    <ng-container dialog-actions>
+      <button type="button" (click)="edit.set(null)" [class]="styles.ghost">Cancelar</button>
+      <button type="button" (click)="saveEdit()" [disabled]="!d.date || !d.time || !d.city.trim() || !d.country.trim() || !!busy()" [class]="styles.primary">Guardar</button>
+    </ng-container>
+  </bo-dialog>
+}
+
+@if (result(); as r) {
+  <bo-dialog eyebrow="Resultado" [title]="players(r.match)" (closed)="result.set(null)">
+    <p class="mb-4 rounded-lg border border-line bg-bg/60 px-3 py-2 text-xs text-muted">
+      Fica como confirmado. Se os sets mudarem, as estatísticas ponto a ponto desta partida deixam de existir.
+    </p>
+
+    <div class="overflow-x-auto">
+      <table class="text-sm">
+        <thead>
+          <tr>
+            <th class="pr-3"></th>
+            @for (set of r.sets; track $index) {
+              <th class="eyebrow px-1 pb-2 text-center font-normal text-faint">Set {{ $index + 1 }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (side of [0, 1]; track side) {
+            <tr>
+              <th class="max-w-40 truncate pr-3 text-left font-semibold">{{ side === 0 ? name(r.match.player_a_name) : name(r.match.player_b_name) }}</th>
+              @for (set of r.sets; track $index; let i = $index) {
+                <td class="p-1">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="2"
+                    placeholder="–"
+                    [value]="set[side]"
+                    (input)="setCell(i, $any(side), $any($event.target).value)"
+                    [attr.aria-label]="'Jogos no set ' + (i + 1)"
+                    class="size-11 rounded-lg border border-line bg-bg text-center font-mono text-lg outline-none focus:border-lime"
+                  />
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-2 flex gap-2">
+      <button type="button" (click)="removeSet()" [disabled]="r.sets.length <= 1" [class]="styles.ghost">− Set</button>
+      <button type="button" (click)="addSet()" [disabled]="r.sets.length >= maxSets" [class]="styles.ghost">+ Set</button>
+    </div>
+    @if (resultProblem(); as problem) {
+      <p class="mt-2 text-sm text-danger">{{ problem }}</p>
+    }
+
+    <fieldset class="mt-5">
+      <legend [class]="styles.label">Vencedor</legend>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button type="button" (click)="setWinner('a')" [class]="styles.chip + ' ' + (r.winner === 'a' ? styles.chipActive : styles.chipIdle)">{{ name(r.match.player_a_name) }}</button>
+        <button type="button" (click)="setWinner('b')" [class]="styles.chip + ' ' + (r.winner === 'b' ? styles.chipActive : styles.chipIdle)">{{ name(r.match.player_b_name) }}</button>
+        <button type="button" (click)="setWinner('')" [class]="styles.chip + ' ' + (r.winner === '' ? styles.chipActive : styles.chipIdle)">Sem vencedor</button>
+      </div>
+    </fieldset>
+
+    <ng-container dialog-actions>
+      <button type="button" (click)="result.set(null)" [class]="styles.ghost">Cancelar</button>
+      <button type="button" (click)="saveResult()" [disabled]="!!resultProblem() || !!busy()" [class]="styles.primary">Guardar resultado</button>
+    </ng-container>
+  </bo-dialog>
+}

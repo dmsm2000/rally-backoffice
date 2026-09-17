@@ -1,0 +1,77 @@
+<bo-page-header eyebrow="Lançamento" title="Lista de espera" description="Quem deixou o email na landing page para ser avisado do lançamento.">
+  <button type="button" (click)="exportCsv()" [disabled]="busy() === 'export'" [class]="styles.ghost">
+    <bo-icon name="download" />
+    Exportar CSV
+  </button>
+  <button type="button" (click)="adding.set({ email: '', locale: 'pt' })" [class]="styles.primary">
+    <bo-icon name="plus" />
+    Adicionar email
+  </button>
+</bo-page-header>
+
+<bo-search class="mb-6 block sm:max-w-sm" placeholder="Pesquisar email" [value]="search()" (valueChange)="setSearch($event)" />
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as entries) {
+  @if (!entries.length) {
+    <bo-empty icon="mail" [title]="search() ? 'Nenhum email encontrado' : 'A lista está vazia'" />
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'email' : 'emails' }}</p>
+    <div class="overflow-hidden" [class]="styles.card">
+      <ul class="divide-y divide-line">
+        @for (entry of entries; track entry.id) {
+          <li class="flex items-center gap-3 px-5 py-3" [class.opacity-50]="busy() === entry.id">
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-mono text-sm">{{ entry.email }}</p>
+              <p class="text-xs text-faint">
+                {{ locales[entry.locale] ?? entry.locale }} · <span [title]="dateTime(entry.created_at)">{{ ago(entry.created_at) }}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              (click)="remove(entry)"
+              [disabled]="!!busy()"
+              aria-label="Remover email"
+              title="Remover email"
+              class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-danger/35 text-danger hover:bg-danger/12 disabled:opacity-40"
+            >
+              <bo-icon name="trash" />
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="3" />
+}
+
+@if (adding(); as draft) {
+  <bo-dialog eyebrow="Lista de espera" title="Adicionar email" (closed)="adding.set(null)">
+    <label class="block space-y-1.5">
+      <span [class]="styles.label">Email</span>
+      <input
+        type="email"
+        autocomplete="off"
+        [value]="draft.email"
+        (input)="adding.set({ email: $any($event.target).value, locale: draft.locale })"
+        (keydown.enter)="add()"
+        [class]="styles.input"
+      />
+    </label>
+    <label class="mt-4 block space-y-1.5">
+      <span [class]="styles.label">Idioma do aviso</span>
+      <select class="bo-select" [value]="draft.locale" (change)="adding.set({ email: draft.email, locale: $any($event.target).value })" [class]="styles.input">
+        @for (option of localeOptions; track option.value) {
+          <option [value]="option.value" [selected]="option.value === draft.locale">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    <ng-container dialog-actions>
+      <button type="button" (click)="adding.set(null)" [class]="styles.ghost">Cancelar</button>
+      <button type="button" (click)="add()" [disabled]="!validEmail(draft.email) || busy() === 'add'" [class]="styles.primary">Adicionar</button>
+    </ng-container>
+  </bo-dialog>
+}

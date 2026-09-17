@@ -1,0 +1,181 @@
+<a routerLink="/venues" [class]="styles.link" class="mb-6">
+  <bo-icon name="arrow-left" />
+  Locais
+</a>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="load(id())" />
+} @else if (venue(); as v) {
+  <section class="overflow-hidden" [class]="styles.card">
+    <div class="flex flex-col md:flex-row">
+      <div class="aspect-4/3 w-full shrink-0 bg-raised md:w-72">
+        @if (cover(); as photo) {
+          <img [src]="photo.url" alt="" class="size-full object-cover" (error)="$any($event.target).style.visibility = 'hidden'" />
+        } @else {
+          <div class="flex size-full items-center justify-center text-faint"><bo-icon name="courts" size="size-10" /></div>
+        }
+      </div>
+      <div class="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            @if (v.status === 'live') {
+              <span [class]="styles.pill + ' ' + tones.ok"><bo-icon name="check" size="size-3" /> Verificado</span>
+            } @else {
+              <span [class]="styles.pill + ' ' + tones.warn">Rascunho {{ v.confirmations }}/2</span>
+            }
+            <span [class]="styles.pill + ' ' + tones.neutral">{{ kinds[v.kind] ?? v.kind }}</span>
+            @if (v.registered_accuracy_m != null && v.registered_accuracy_m > 100) {
+              <span [class]="styles.pill + ' ' + tones.warn" title="Precisão do GPS quando foi registado">GPS ± {{ round(v.registered_accuracy_m) }} m</span>
+            }
+          </div>
+          <h1 class="display mt-3 text-3xl">{{ v.name }}</h1>
+          <p class="mt-1 text-sm text-muted">{{ v.flag }} {{ v.city }}, {{ v.country }}</p>
+          <p class="mt-0.5 text-sm text-muted">
+            Registado por {{ v.creator_name ?? 'conta apagada ou admin' }} ·
+            <span [title]="dateTime(v.created_at)">{{ date(v.created_at) }}</span>
+            @if (v.verified_at) {
+              · verificado {{ ago(v.verified_at) }}
+            }
+          </p>
+        </div>
+        <div class="mt-auto flex flex-wrap gap-2">
+          <a [href]="mapsUrl(v.lat, v.lng)" target="_blank" rel="noopener" [class]="styles.ghost">
+            <bo-icon name="map-pin" />
+            Ver no mapa
+          </a>
+          @if (v.status === 'draft') {
+            <button type="button" (click)="verify()" [disabled]="busy()" [class]="styles.ghost">
+              <bo-icon name="shield-check" />
+              Verificar
+            </button>
+          }
+          <button type="button" (click)="removeVenue()" [disabled]="busy()" [class]="styles.danger">
+            <bo-icon name="trash" />
+            Apagar local
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (draft(); as d) {
+    <form class="mt-6 p-5 sm:p-6" [class]="styles.card" (submit)="$event.preventDefault(); save()">
+      <h2 class="mb-4 font-bold">Dados do local</h2>
+      <bo-venue-fields [draft]="d" (draftChange)="draft.set($event)" />
+      <div class="mt-5 flex flex-col items-end gap-2 border-t border-line pt-4">
+        @if (dirty() && problem(); as message) {
+          <p class="text-sm text-danger">{{ message }}</p>
+        }
+        <div class="flex gap-2">
+          <button type="button" (click)="reset()" [disabled]="!dirty() || busy()" [class]="styles.ghost">Repor</button>
+          <button type="submit" [disabled]="!dirty() || !!problem() || busy()" [class]="styles.primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <section class="mt-8">
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <h2 class="text-lg font-bold">Campos <span class="font-mono text-sm text-faint">{{ v.courts.length }}</span></h2>
+      <button type="button" (click)="openCourt('new')" [disabled]="busy()" [class]="styles.ghost">
+        <bo-icon name="plus" />
+        Adicionar campo
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      @for (court of courts(); track court.id) {
+        <article class="p-5" [class]="styles.card">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+              <h3 class="font-bold">{{ courtLabel(court.number) }}</h3>
+              <p class="mt-0.5 text-sm text-muted">
+                {{ surfaces[court.surface] ?? court.surface }} · {{ court.indoor ? 'Interior' : 'Exterior' }}{{ court.lights ? ' · Iluminação' : '' }} ·
+                {{ court.capture_count }} {{ court.capture_count === 1 ? 'captura' : 'capturas' }}
+              </p>
+              <p class="mt-0.5 text-xs text-faint">
+                {{ court.creator_name ?? 'Sem autor' }} · {{ date(court.created_at) }}
+                @if (court.open_reports) {
+                  · <a routerLink="/reports/courts" class="font-semibold text-danger hover:underline">{{ court.open_reports }} {{ court.open_reports === 1 ? 'denúncia aberta' : 'denúncias abertas' }}</a>
+                }
+              </p>
+            </div>
+            <div class="flex shrink-0 flex-wrap gap-2">
+              @if (v.status === 'live') {
+                <a [href]="courtUrl(court.id)" target="_blank" rel="noopener" [class]="styles.ghost" title="Ver na app" aria-label="Ver na app">
+                  <bo-icon name="external" />
+                </a>
+              }
+              <button type="button" (click)="openCourt(court)" [disabled]="busy()" [class]="styles.ghost">
+                <bo-icon name="pencil" />
+                Editar
+              </button>
+              <button type="button" (click)="removeCourt(court)" [disabled]="busy()" [class]="styles.danger" aria-label="Apagar campo" title="Apagar campo">
+                <bo-icon name="trash" />
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+            @for (photo of court.photos; track photo.id) {
+              <figure class="group relative aspect-4/3 overflow-hidden rounded-lg bg-raised">
+                <a [href]="photo.url" target="_blank" rel="noopener" title="Abrir a foto">
+                  <img [src]="photo.url" alt="" loading="lazy" class="size-full object-cover" (error)="$any($event.target).style.visibility = 'hidden'" />
+                </a>
+                <figcaption class="pointer-events-none absolute bottom-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 font-mono text-[10px] text-white">
+                  ▲ {{ photo.vote_count }}
+                </figcaption>
+                <button
+                  type="button"
+                  (click)="removePhoto(photo)"
+                  [disabled]="busy()"
+                  aria-label="Apagar foto"
+                  title="Apagar foto"
+                  class="absolute top-1 right-1 flex size-7 cursor-pointer items-center justify-center rounded-full bg-black/70 text-white opacity-100 transition-opacity hover:bg-danger sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
+                >
+                  <bo-icon name="trash" size="size-3.5" />
+                </button>
+              </figure>
+            }
+            @if (court.photos.length < photoLimit) {
+              <label
+                class="flex aspect-4/3 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-xs text-muted transition-colors hover:border-fg/40 hover:text-fg"
+                [class.pointer-events-none]="uploadingFor() === court.id"
+              >
+                @if (uploadingFor() === court.id) {
+                  <span class="size-5 animate-spin rounded-full border-2 border-line border-t-lime"></span>
+                  A carregar…
+                } @else {
+                  <bo-icon name="camera" size="size-5" />
+                  Adicionar foto
+                }
+                <input type="file" accept="image/*" class="sr-only" (change)="addPhoto(court, $any($event.target))" />
+              </label>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  @if (courtDialog(); as target) {
+    <bo-dialog
+      eyebrow="Campo"
+      [title]="target === 'new' ? 'Novo campo em ' + v.name : 'Editar ' + courtLabel(target.number)"
+      (closed)="courtDialog.set(null)"
+    >
+      <bo-court-fields [court]="courtDraft()" (courtChange)="courtDraft.set($event)" />
+      <ng-container dialog-actions>
+        <button type="button" (click)="courtDialog.set(null)" [class]="styles.ghost">Cancelar</button>
+        <button type="button" (click)="saveCourt()" [disabled]="busy()" [class]="styles.primary">
+          {{ target === 'new' ? 'Criar campo' : 'Guardar' }}
+        </button>
+      </ng-container>
+    </bo-dialog>
+  }
+} @else {
+  <div class="space-y-6" aria-busy="true" aria-label="A carregar">
+    <div class="h-56 animate-pulse" [class]="styles.card"></div>
+    <div class="h-72 animate-pulse" [class]="styles.card"></div>
+  </div>
+}

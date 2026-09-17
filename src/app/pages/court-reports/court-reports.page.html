@@ -1,0 +1,158 @@
+<bo-page-header
+  eyebrow="Moderação"
+  title="Denúncias de campos"
+  description="Agrupadas por campo. Ignorar ou marcar como tratada fecha todas as denúncias desse campo de uma vez."
+>
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div [class]="styles.segmented" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'open'" (click)="setTab('open')" [class]="styles.segment + ' ' + (tab() === 'open' ? styles.segmentActive : styles.segmentIdle)">
+      Abertas
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'resolved'" (click)="setTab('resolved')" [class]="styles.segment + ' ' + (tab() === 'resolved' ? styles.segmentActive : styles.segmentIdle)">
+      Resolvidas
+    </button>
+  </div>
+
+  @if (reasonOptions().length > 1) {
+    <div class="flex flex-wrap gap-2" aria-label="Filtrar por motivo">
+      @for (option of reasonOptions(); track option.key) {
+        <button
+          type="button"
+          (click)="toggleReason(option.key)"
+          [attr.aria-pressed]="reason() === option.key"
+          class="cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
+          [class]="reason() === option.key ? 'border-fg bg-fg text-bg' : 'border-line text-muted hover:border-fg/40 hover:text-fg'"
+        >
+          {{ option.label }} <span class="font-mono opacity-70">{{ option.count }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (groups(); as groups) {
+  @if (!groups.length) {
+    @if (tab() === 'open') {
+      <bo-empty title="Nenhuma denúncia aberta" body="Quando alguém denunciar um campo na app, aparece aqui." />
+    } @else {
+      <bo-empty icon="clock" title="Ainda nada resolvido" body="As denúncias que ignorares ou tratares ficam aqui." />
+    }
+  } @else {
+    <p class="mb-3 text-sm text-muted">
+      {{ groups.length }} {{ groups.length === 1 ? 'campo' : 'campos' }}
+    </p>
+    <div class="space-y-4">
+      @for (group of groups; track group.key) {
+        @let r = group.first;
+        <article [class]="styles.card" class="overflow-hidden" [class.opacity-60]="busy() === group.key">
+          <div class="flex flex-col gap-5 p-5 md:flex-row">
+            <div class="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-xl bg-raised md:w-48">
+              @if (r.cover_url) {
+                <img [src]="r.cover_url" alt="" loading="lazy" class="size-full object-cover" (error)="$any($event.target).style.visibility = 'hidden'" />
+              } @else {
+                <div class="flex size-full items-center justify-center text-faint">
+                  <bo-icon name="courts" size="size-8" />
+                </div>
+              }
+              <span class="absolute top-2 left-2 rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white">
+                {{ group.reports.length }} {{ group.reports.length === 1 ? 'denúncia' : 'denúncias' }}
+              </span>
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                @if (r.venue_status === 'live') {
+                  <span [class]="styles.pill + ' ' + tones.ok">
+                    <bo-icon name="check" size="size-3" />
+                    Verificado
+                  </span>
+                } @else {
+                  <span [class]="styles.pill + ' ' + tones.warn">Rascunho {{ r.venue_confirmations }}/2</span>
+                }
+                <span [class]="styles.pill + ' ' + tones.neutral">{{ kinds[r.venue_kind] ?? r.venue_kind }}</span>
+                @if (r.venue_registered_accuracy_m != null && r.venue_registered_accuracy_m > 100) {
+                  <span [class]="styles.pill + ' ' + tones.warn" title="Precisão do GPS quando o local foi registado">
+                    GPS ± {{ round(r.venue_registered_accuracy_m) }} m
+                  </span>
+                }
+              </div>
+
+              <h2 class="mt-2 text-xl font-bold">
+                <a [routerLink]="['/venues', r.venue_id]" class="hover:underline">{{ r.venue_name }}</a> <span class="text-muted">· {{ courtLabel(r.court_number) }}</span>
+              </h2>
+              <p class="mt-1 text-sm text-muted">
+                {{ r.venue_flag }} {{ r.venue_city }}, {{ r.venue_country }} · {{ surfaces[r.court_surface] ?? r.court_surface }} ·
+                {{ r.court_indoor ? 'Interior' : 'Exterior' }}
+              </p>
+              <p class="mt-0.5 text-sm text-muted">
+                {{ r.court_capture_count }} {{ r.court_capture_count === 1 ? 'captura' : 'capturas' }} ·
+                {{ r.venue_court_count }} {{ r.venue_court_count === 1 ? 'campo' : 'campos' }} no local ·
+                registado <span [title]="dateTime(r.court_created_at)">{{ ago(r.court_created_at) }}</span>
+              </p>
+
+              <bo-report-list class="mt-4" [reports]="group.reports" [reasons]="reasons" />
+            </div>
+          </div>
+
+          <footer class="flex flex-col gap-3 border-t border-line px-5 py-3.5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap gap-x-5 gap-y-2">
+              <a [href]="mapsUrl(r.venue_lat, r.venue_lng)" target="_blank" rel="noopener" [class]="styles.link">
+                <bo-icon name="map-pin" />
+                Ver no mapa
+              </a>
+              @if (r.venue_status === 'live') {
+                <a [href]="courtUrl(r.court_id)" target="_blank" rel="noopener" [class]="styles.link">
+                  <bo-icon name="external" />
+                  Ver na app
+                </a>
+              } @else {
+                <span class="inline-flex items-center gap-1.5 text-sm text-faint" title="Um rascunho só é visível a quem o registou">
+                  <bo-icon name="eye" />
+                  Rascunho — não visível na app
+                </span>
+              }
+            </div>
+
+            @if (tab() === 'open') {
+              <div class="flex flex-wrap gap-2">
+                <button type="button" (click)="resolve(group, 'dismissed')" [disabled]="busy() === group.key" [class]="styles.ghost" title="Não há nada de errado com este campo">
+                  Ignorar
+                </button>
+                <button type="button" (click)="resolve(group, 'actioned')" [disabled]="busy() === group.key" [class]="styles.ok" title="Já trataste disto (por exemplo, corrigiste os dados)">
+                  <bo-icon name="check" />
+                  Tratada
+                </button>
+                <button type="button" (click)="deleteCourt(group)" [disabled]="busy() === group.key" [class]="styles.danger">
+                  <bo-icon name="trash" />
+                  Apagar campo
+                </button>
+                @if (r.venue_court_count > 1) {
+                  <button type="button" (click)="deleteVenue(group)" [disabled]="busy() === group.key" [class]="styles.danger">
+                    Apagar local
+                  </button>
+                }
+              </div>
+            } @else {
+              <p class="text-sm text-muted">
+                {{ r.resolution === 'dismissed' ? 'Ignorada' : 'Tratada' }}
+                @if (r.resolved_at) {
+                  <span [title]="dateTime(r.resolved_at)">{{ ago(r.resolved_at) }}</span>
+                }
+              </p>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+  }
+} @else {
+  <bo-skeleton-cards />
+}

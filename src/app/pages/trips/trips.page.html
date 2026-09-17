@@ -1,0 +1,119 @@
+<bo-page-header eyebrow="Comunidade" title="Viagens" description="Jogadores que vão viajar e procuram quem os receba para jogar.">
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+  <div class="flex flex-wrap gap-2">
+    @for (option of filters; track option.key) {
+      <button
+        type="button"
+        (click)="setFilter(option.param)"
+        [attr.aria-pressed]="when() === option.key"
+        [class]="styles.chip + ' ' + (when() === option.key ? styles.chipActive : styles.chipIdle)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+  <bo-search class="lg:w-72" placeholder="Destino, jogador ou nota" [value]="search()" (valueChange)="setSearch($event)" />
+</div>
+
+@if (playerParam()) {
+  <p class="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted">
+    Só as viagens de um jogador
+    <button type="button" (click)="clearPlayer()" [class]="styles.pill + ' ' + tones.neutral" class="cursor-pointer hover:text-fg">
+      <bo-icon name="close" size="size-3" />
+      Ver todas
+    </button>
+  </p>
+}
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (rows(); as trips) {
+  @if (!trips.length) {
+    <bo-empty icon="world" [title]="search() ? 'Nenhuma viagem encontrada' : when() === 'upcoming' ? 'Nenhuma viagem marcada' : 'Nenhuma viagem'" />
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ total() }} {{ total() === 1 ? 'viagem' : 'viagens' }}</p>
+    <div class="space-y-3">
+      @for (trip of trips; track trip.id) {
+        <article class="flex flex-col gap-4 p-4 lg:flex-row lg:items-center" [class]="styles.card" [class.opacity-60]="busy() === trip.id">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="text-lg font-bold">{{ trip.destination_city }}, {{ trip.destination_country }}</p>
+              @if (isOngoing(trip)) {
+                <span [class]="styles.pill + ' ' + tones.lime">A decorrer</span>
+              } @else if (isPast(trip)) {
+                <span [class]="styles.pill + ' ' + tones.neutral">Passou</span>
+              }
+            </div>
+            <p class="mt-0.5 text-sm text-muted">
+              {{ day(trip.from_date) }} – {{ day(trip.to_date) }} ·
+              <a [routerLink]="['/players', trip.player_id]" class="font-semibold text-fg hover:underline">{{ name(trip.player_name) }}</a>
+              @if (trip.player_member_number != null) {
+                <span class="ml-1 font-mono text-xs text-faint">{{ member(trip.player_member_number) }}</span>
+              }
+            </p>
+            @if (trip.note) {
+              <p class="mt-1 line-clamp-2 text-sm">“{{ trip.note }}”</p>
+            }
+            <p class="mt-1 text-xs text-faint">
+              @if (trip.hosts) {
+                {{ trip.hosts === 1 ? 'Ofereceu-se' : 'Ofereceram-se' }}: {{ trip.host_names.join(', ') }}
+              } @else {
+                Ainda ninguém se ofereceu
+              }
+              · publicada <span [title]="dateTime(trip.created_at)">{{ ago(trip.created_at) }}</span>
+            </p>
+          </div>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            <button type="button" (click)="openEdit(trip)" [disabled]="!!busy()" [class]="styles.ghost">
+              <bo-icon name="pencil" />
+              Editar
+            </button>
+            <button type="button" (click)="remove(trip)" [disabled]="!!busy()" [class]="styles.danger" aria-label="Apagar viagem" title="Apagar viagem">
+              <bo-icon name="trash" />
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+    <bo-pager [total]="total()" [offset]="offset()" [limit]="limit" (page)="offset.set($event)" />
+  }
+} @else {
+  <bo-skeleton-cards [count]="4" />
+}
+
+@if (edit(); as d) {
+  <bo-dialog eyebrow="Viagem" [title]="'Viagem de ' + name(d.trip.player_name)" (closed)="edit.set(null)">
+    <bo-place-fields countryLabel="País de destino" cityLabel="Cidade de destino" [country]="d.country" (countryChange)="patchEdit({ country: $event })" [city]="d.city" (cityChange)="patchEdit({ city: $event })" />
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <label class="block space-y-1.5">
+        <span [class]="styles.label">Partida</span>
+        <input type="date" [value]="d.fromDate" (input)="patchEdit({ fromDate: $any($event.target).value })" [class]="styles.input" />
+      </label>
+      <label class="block space-y-1.5">
+        <span [class]="styles.label">Regresso</span>
+        <input type="date" [value]="d.toDate" [min]="d.fromDate" (input)="patchEdit({ toDate: $any($event.target).value })" [class]="styles.input" />
+      </label>
+    </div>
+    <label class="mt-4 block space-y-1.5">
+      <span [class]="styles.label">Descrição</span>
+      <textarea rows="3" maxlength="500" [value]="d.note" (input)="patchEdit({ note: $any($event.target).value })" [class]="styles.input"></textarea>
+    </label>
+    <ng-container dialog-actions>
+      <button type="button" (click)="edit.set(null)" [class]="styles.ghost">Cancelar</button>
+      <button
+        type="button"
+        (click)="saveEdit()"
+        [disabled]="!d.city.trim() || !d.country.trim() || !d.fromDate || !d.toDate || d.toDate < d.fromDate || !!busy()"
+        [class]="styles.primary"
+      >
+        Guardar
+      </button>
+    </ng-container>
+  </bo-dialog>
+}
