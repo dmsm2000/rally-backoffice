@@ -38,8 +38,17 @@ in SQL first, so a non-admin who opens this app gets nothing.
    select id from auth.users where email = 'your-email@example.com';
    ```
 
-3. `cp src/environments/environment.example.ts src/environments/environment.ts` and fill in the
-   Supabase URL and anon key (the same ones Rally uses). The file is gitignored.
+3. Create `src/environments/environment.ts` (gitignored):
+
+   ```ts
+   export const environment = {
+     supabaseUrl: 'https://xxxxx.supabase.co',
+     supabaseAnonKey: '...',
+     rallyAppUrl: 'https://rally-teal-three.vercel.app/'
+   };
+   ```
+
+   Use the same Supabase URL and anon key as Rally.
 4. `npm install`, then `npm start` → http://localhost:4300
 
 Sign in with the same email/password as in Rally.
@@ -50,3 +59,11 @@ Sign in with the same email/password as in Rally.
 npm start       # dev server on :4300
 npm run build   # production build into dist/
 ```
+
+## Deployment
+
+Pushing to `master` runs `.github/workflows/deploy-pages.yml`, which builds the app and deploys it to
+GitHub Pages. It generates `environment.ts` from the repo's `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+secrets (Settings → Secrets and variables → Actions) — these must be added here even though the
+values are the same as `rally`'s. GitHub Pages must be enabled once (Settings → Pages → Source:
+GitHub Actions).

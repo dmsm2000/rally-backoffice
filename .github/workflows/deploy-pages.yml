@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Runner's bundled npm can hit a known crash ("Exit handler never
+      # called!", npm/cli#4028) — upgrading npm first avoids it.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      # environment.ts is gitignored (holds the Supabase URL/anon key, same project as `rally`) —
+      # generate it here from repo secrets (Settings → Secrets and variables → Actions →
+      # SUPABASE_URL / SUPABASE_ANON_KEY).
+      - name: Generate environment.ts
+        run: |
+          mkdir -p src/environments
+          cat > src/environments/environment.ts <<EOF
+          export const environment = {
+            supabaseUrl: '${{ secrets.SUPABASE_URL }}',
+            supabaseAnonKey: '${{ secrets.SUPABASE_ANON_KEY }}',
+            rallyAppUrl: 'https://rally-teal-three.vercel.app/'
+          };
+          EOF
+
+      - run: npx ng build --configuration production --base-href /rally-backoffice/
+
+      # SPA fallback: GitHub Pages has no server-side rewrites, so unknown paths (e.g. a refresh on
+      # /players) 404 without this — Angular's router then takes over from index.html.
+      - run: cp dist/rally-backoffice/browser/index.html dist/rally-backoffice/browser/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/rally-backoffice/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
