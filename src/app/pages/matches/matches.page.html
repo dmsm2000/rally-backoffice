@@ -57,10 +57,16 @@
               @if (match.format === 'Doubles') {
                 {{ players(match) }}
               } @else {
-                <a [routerLink]="['/players', match.player_a]" class="hover:underline">{{ name(match.player_a_name) }}</a>
+                @if (match.player_a) {
+                  <a [routerLink]="['/players', match.player_a]" class="hover:underline">{{ name(match.player_a_name) }}</a>
+                } @else {
+                  <span class="text-muted">{{ name(null) }}</span>
+                }
                 @if (match.player_b) {
                   <span class="text-muted"> vs </span>
                   <a [routerLink]="['/players', match.player_b]" class="hover:underline">{{ name(match.player_b_name) }}</a>
+                } @else if (bLeft(match)) {
+                  <span class="text-muted"> vs {{ name(null) }}</span>
                 } @else {
                   <span class="font-normal text-muted"> · à procura de adversário</span>
                 }

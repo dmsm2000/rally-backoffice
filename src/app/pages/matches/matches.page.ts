@@ -298,7 +298,14 @@ export class MatchesPage {
     if (match.format === 'Doubles') {
       return match.participant_names.length ? match.participant_names.join(', ') : playerName(match.player_a_name);
     }
-    return match.player_b ? `${playerName(match.player_a_name)} vs ${playerName(match.player_b_name)}` : `${playerName(match.player_a_name)} (à procura de adversário)`;
+    return match.player_b || this.bLeft(match)
+      ? `${playerName(match.player_a_name)} vs ${playerName(match.player_b_name)}`
+      : `${playerName(match.player_a_name)} (à procura de adversário)`;
+  }
+
+  /** An empty player_b on a direct invite or a played match is someone who deleted their account, not an open spot. */
+  protected bLeft(match: MatchRow): boolean {
+    return !match.player_b && (match.kind === 'direct' || match.status === 'complete');
   }
 
   private async write(id: string, message: string, action: () => Promise<void>): Promise<void> {

@@ -225,9 +225,10 @@ export class PlayerDetailPage {
       title: `Apagar ${p.first_name} ${p.last_name}?`,
       message: `A conta ${p.email ?? ''} deixa de existir. Não dá para desfazer — se só queres impedir a entrada, bloqueia.`,
       details: [
-        `${plural(c.posts, 'publicação', 'publicações')}, com fotos e vídeos, ${plural(c.trips, 'viagem', 'viagens')} e ${plural(c.matches, 'partida', 'partidas')} (também para os outros jogadores dessas partidas).`,
+        `Desaparecem ${plural(c.posts, 'publicação', 'publicações')}, com fotos e vídeos, e ${plural(c.trips, 'viagem', 'viagens')}.`,
+        `Das ${plural(c.matches, 'partida', 'partidas')}: as que ainda não se jogaram são canceladas, ou voltam a ficar abertas se se tinha juntado à de outra pessoa, e os outros jogadores são avisados. As já jogadas ficam para os adversários.`,
         'As conversas privadas desta pessoa também desaparecem, para os dois lados.',
-        `Ficam, sem autor: ${plural(c.venues, 'local registado', 'locais registados')}, ${plural(c.photos, 'foto de campo', 'fotos de campos')} e as denúncias que fez.`
+        `Ficam, sem autor: ${plural(c.venues, 'local registado', 'locais registados')}, ${plural(c.photos, 'foto de campo', 'fotos de campos')}, as visitas aos campos e as denúncias que fez.`
       ],
       confirmLabel: 'Apagar conta',
       tone: 'danger'

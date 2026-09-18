@@ -181,7 +181,8 @@ export interface MatchRow {
   city: string;
   country: string;
   note: string | null;
-  player_a: string;
+  /** Null once that player deleted their account (0048_delete_player.sql), like player_b on a played match. */
+  player_a: string | null;
   player_a_name: string | null;
   player_b: string | null;
   player_b_name: string | null;

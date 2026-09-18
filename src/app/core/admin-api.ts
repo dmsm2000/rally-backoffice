@@ -57,6 +57,7 @@ const KNOWN_ERRORS: [RegExp, string][] = [
   [/match cannot be cancelled/i, 'Esta partida já não pode ser cancelada.'],
   [/match has no result to edit/i, 'Esta partida não tem resultado para editar.'],
   [/winner must be one of the players/i, 'O vencedor tem de ser um dos jogadores.'],
+  [/deleted their account/i, 'Um dos jogadores apagou a conta, por isso este resultado já não se pode alterar.'],
   [/invalid sets|matches_sets_valid/i, 'Os sets não são válidos (1 a 6, números inteiros).'],
   [/posts_has_content/i, 'Uma publicação precisa de texto ou de uma foto/vídeo.'],
   [/landing_waitlist_email_check/i, 'Esse email não é válido.'],
