@@ -29,8 +29,9 @@ in SQL first, so a non-admin who opens this app gets nothing.
 
 ## Setup
 
-1. Apply `rally-supabase/migrations/0045_backoffice_moderation.sql` and then `0046_backoffice_crud.sql` in the
-   Supabase SQL Editor.
+1. Make sure `rally-supabase/supabase/migrations/0045_backoffice_moderation.sql` and `0046_backoffice_crud.sql`
+   are applied: run `supabase db push --remote` from `rally-supabase` (see its README; `supabase migration list --remote`
+   shows what is still missing).
 2. Make your Rally account an admin (same SQL Editor):
 
    ```sql
