@@ -19,6 +19,16 @@ export const POST_REASONS: Partial<Record<string, { label: string; tone: Tone }>
   other: { label: 'Outro', tone: 'neutral' }
 };
 
+export const PLAYER_REASONS: Partial<Record<string, { label: string; tone: Tone }>> = {
+  harassment: { label: 'Assédio ou ameaças', tone: 'danger' },
+  hate: { label: 'Discurso de ódio', tone: 'danger' },
+  sexual: { label: 'Conteúdo sexual', tone: 'danger' },
+  underage: { label: 'Parece ser menor de idade', tone: 'danger' },
+  impersonation: { label: 'Faz-se passar por outra pessoa', tone: 'warn' },
+  spam: { label: 'Spam ou burla', tone: 'warn' },
+  other: { label: 'Outro', tone: 'neutral' }
+};
+
 export const SURFACES: Partial<Record<string, string>> = {
   Clay: 'Terra batida',
   Hard: 'Rápido',

@@ -14,6 +14,7 @@ import {
   Page,
   PlayerDetail,
   PlayerRow,
+  PlayerReport,
   PostReport,
   PostRow,
   Resolution,
@@ -121,6 +122,10 @@ export class AdminApi {
     return this.call<PostReport[]>('admin_post_reports', { p_open: open });
   }
 
+  async playerReports(open: boolean): Promise<PlayerReport[]> {
+    return this.call<PlayerReport[]>('admin_player_reports', { p_open: open });
+  }
+
   async venues(status: VenueStatus | null = null): Promise<Venue[]> {
     return this.call<Venue[]>('admin_venues', { p_status: status });
   }
@@ -135,6 +140,10 @@ export class AdminApi {
 
   async resolvePostReports(postId: string, resolution: Resolution): Promise<number> {
     return this.call<number>('admin_resolve_post_reports', { p_post_id: postId, p_resolution: resolution });
+  }
+
+  async resolvePlayerReports(playerId: string, resolution: Resolution): Promise<number> {
+    return this.call<number>('admin_resolve_player_reports', { p_player_id: playerId, p_resolution: resolution });
   }
 
   async deletePost(postId: string): Promise<DeleteOutcome> {

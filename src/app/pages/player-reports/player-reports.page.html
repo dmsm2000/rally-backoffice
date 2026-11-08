@@ -1,0 +1,119 @@
+<bo-page-header
+  eyebrow="Moderação"
+  title="Denúncias de jogadores"
+  description="Agrupadas por jogador. Ignorar ou marcar como tratada fecha todas as denúncias desse jogador de uma vez. Para suspender ou apagar a conta, abre o jogador."
+>
+  <button type="button" (click)="reload()" [class]="styles.ghost">
+    <bo-icon name="refresh" />
+    Atualizar
+  </button>
+</bo-page-header>
+
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div [class]="styles.segmented" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'open'" (click)="setTab('open')" [class]="styles.segment + ' ' + (tab() === 'open' ? styles.segmentActive : styles.segmentIdle)">
+      Abertas
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'resolved'" (click)="setTab('resolved')" [class]="styles.segment + ' ' + (tab() === 'resolved' ? styles.segmentActive : styles.segmentIdle)">
+      Resolvidas
+    </button>
+  </div>
+
+  @if (reasonOptions().length > 1) {
+    <div class="flex flex-wrap gap-2" aria-label="Filtrar por motivo">
+      @for (option of reasonOptions(); track option.key) {
+        <button
+          type="button"
+          (click)="toggleReason(option.key)"
+          [attr.aria-pressed]="reason() === option.key"
+          class="cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition-colors"
+          [class]="reason() === option.key ? 'border-fg bg-fg text-bg' : 'border-line text-muted hover:border-fg/40 hover:text-fg'"
+        >
+          {{ option.label }} <span class="font-mono opacity-70">{{ option.count }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (error(); as message) {
+  <bo-error [message]="message" (retry)="reload()" />
+} @else if (groups(); as groups) {
+  @if (!groups.length) {
+    @if (tab() === 'open') {
+      <bo-empty title="Nenhuma denúncia aberta" body="Quando alguém denunciar um jogador na app, aparece aqui." />
+    } @else {
+      <bo-empty icon="clock" title="Ainda nada resolvido" body="As denúncias que ignorares ou tratares ficam aqui." />
+    }
+  } @else {
+    <p class="mb-3 text-sm text-muted">{{ groups.length }} {{ groups.length === 1 ? 'jogador' : 'jogadores' }}</p>
+    <div class="space-y-4">
+      @for (group of groups; track group.key) {
+        @let r = group.first;
+        <article [class]="styles.card" class="overflow-hidden" [class.opacity-60]="busy() === group.key">
+          <div class="p-5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white">
+                {{ group.reports.length }} {{ group.reports.length === 1 ? 'denúncia' : 'denúncias' }}
+              </span>
+              @if (r.reported_suspended) {
+                <span [class]="styles.pill + ' ' + tones.danger">Conta suspensa</span>
+              }
+              @if (r.reported_total_reports > group.reports.length) {
+                <span [class]="styles.pill + ' ' + tones.warn">
+                  {{ r.reported_total_reports }} no total, contando as já resolvidas
+                </span>
+              }
+              <span class="text-xs text-faint" [title]="dateTime(r.reported_since)">na RALLY {{ ago(r.reported_since) }}</span>
+            </div>
+
+            <p class="mt-3 text-sm">
+              <a [routerLink]="['/players', r.reported_id]" class="font-bold hover:underline">
+                {{ r.reported_name ?? 'Jogador sem nome' }}
+              </a>
+              @if (r.reported_member_number != null) {
+                <span class="font-mono text-xs text-faint">{{ member(r.reported_member_number) }}</span>
+              }
+              @if (r.reported_city) {
+                <span class="text-muted">· {{ r.reported_city }}, {{ r.reported_country }}</span>
+              }
+            </p>
+
+            <bo-report-list class="mt-4" [reports]="group.reports" [reasons]="reasons" />
+          </div>
+
+          <footer class="flex flex-col gap-3 border-t border-line px-5 py-3.5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap gap-x-5 gap-y-2">
+              <a [routerLink]="['/players', r.reported_id]" [class]="styles.link">
+                <bo-icon name="users" />
+                Abrir jogador (suspender ou apagar)
+              </a>
+            </div>
+
+            @if (tab() === 'open') {
+              <bo-menu>
+                <button type="button" (click)="resolve(group, 'dismissed')" [disabled]="busy() === group.key" [class]="styles.menuItem" title="Não há nada de errado com este jogador">
+                  <bo-icon name="close" />
+                  Ignorar
+                </button>
+                <button type="button" (click)="resolve(group, 'actioned')" [disabled]="busy() === group.key" [class]="styles.menuItemOk" title="Já trataste disto de outra forma">
+                  <bo-icon name="check" />
+                  Tratada
+                </button>
+              </bo-menu>
+            } @else {
+              <p class="text-sm text-muted">
+                {{ r.resolution === 'dismissed' ? 'Ignorada' : 'Tratada' }}
+                @if (r.resolved_at) {
+                  <span [title]="dateTime(r.resolved_at)">{{ ago(r.resolved_at) }}</span>
+                }
+              </p>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+  }
+} @else {
+  <bo-skeleton-cards />
+}

@@ -1,7 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminApi } from '../../core/admin-api';
-import { BAR_CLASSES, COURT_REASONS, POST_REASONS, TONE_CLASSES, Tone, formatNumber, timeAgo } from '../../core/format';
+import {
+  BAR_CLASSES,
+  COURT_REASONS,
+  PLAYER_REASONS,
+  POST_REASONS,
+  TONE_CLASSES,
+  Tone,
+  formatNumber,
+  timeAgo
+} from '../../core/format';
 import { describeLog } from '../../core/log-format';
 import { LogEntry } from '../../core/models';
 import { ModerationStore } from '../../core/moderation-store';
@@ -82,6 +91,14 @@ export class DashboardPage {
         tone: d.open_post_reports ? 'danger' : 'ok'
       },
       {
+        label: 'Denúncias de jogadores',
+        value: d.open_player_reports,
+        detail: d.open_player_reports ? `em ${d.reported_players} ${d.reported_players === 1 ? 'jogador' : 'jogadores'}` : 'Tudo em dia',
+        link: '/reports/players',
+        icon: 'users',
+        tone: d.open_player_reports ? 'danger' : 'ok'
+      },
+      {
         label: 'Rascunhos antigos',
         value: d.venues_stale_draft,
         detail: d.venues_stale_draft ? 'por confirmar há mais de 60 dias' : 'Nenhum abandonado',
@@ -97,7 +114,8 @@ export class DashboardPage {
     const d = this.store.dashboard();
     return [
       { title: 'Motivos — campos', link: '/reports/courts', bars: reasonBars(d?.court_report_reasons ?? {}, COURT_REASONS) },
-      { title: 'Motivos — publicações', link: '/reports/posts', bars: reasonBars(d?.post_report_reasons ?? {}, POST_REASONS) }
+      { title: 'Motivos — publicações', link: '/reports/posts', bars: reasonBars(d?.post_report_reasons ?? {}, POST_REASONS) },
+      { title: 'Motivos — jogadores', link: '/reports/players', bars: reasonBars(d?.player_report_reasons ?? {}, PLAYER_REASONS) }
     ];
   });
 

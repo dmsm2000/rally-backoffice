@@ -9,8 +9,11 @@ export interface Dashboard {
   reported_courts: number;
   open_post_reports: number;
   reported_posts: number;
+  open_player_reports: number;
+  reported_players: number;
   court_report_reasons: Record<string, number>;
   post_report_reasons: Record<string, number>;
+  player_report_reasons: Record<string, number>;
   players: number;
   players_last_7d: number;
   players_blocked: number;
@@ -301,6 +304,19 @@ export interface PostReport extends ReportBase {
   author_member_number: number | null;
   author_city: string | null;
   author_country: string | null;
+}
+
+/** A report about a player (0052): what the reporter said, and enough of the player to act without opening them. */
+export interface PlayerReport extends ReportBase {
+  reported_id: string;
+  reported_name: string | null;
+  reported_member_number: number | null;
+  reported_city: string | null;
+  reported_country: string | null;
+  reported_since: string;
+  reported_suspended: boolean;
+  /** Every report ever filed about this player, open or not. */
+  reported_total_reports: number;
 }
 
 export interface Venue {

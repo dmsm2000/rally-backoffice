@@ -53,6 +53,12 @@ export class Shell {
           badge: { count: d => d.reported_posts, tone: 'danger' }
         },
         {
+          label: 'Denúncias de jogadores',
+          path: '/reports/players',
+          icon: 'users',
+          badge: { count: d => d.reported_players, tone: 'danger' }
+        },
+        {
           label: 'Bugs reportados',
           path: '/reports/bugs',
           icon: 'error-circle',
